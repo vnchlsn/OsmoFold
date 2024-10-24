@@ -4,7 +4,7 @@ Vincent Nicholson<sup>1</sup> and Thomas C. Boothby<sup>1</sup>
 
 <sup>1</sup> - Department of Molecular Biology, Univeristy of Wyoming, Laramie WY
 
-OsmoFold is a tool that uses Auton and Bolen's empherical transfer free energy measurements to calculate the effect of osmolytes on protein folding. If you haven't already done so, we reccomend reading the following literature.
+OsmoFold is a tool that uses Auton and Bolen's empherical transfer free energy measurements to calculate the effect of osmolytes on protein folding. If you haven't already done so, we recommend reading the following literature.
 
 
 1.   [Application of the transfer model to understand how naturally occurring osmolytes affect protein stability](https://pubmed.ncbi.nlm.nih.gov/17875431/)
