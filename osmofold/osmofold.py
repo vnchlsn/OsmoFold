@@ -26,7 +26,7 @@ def amino_to_energy(amino, cosolute):
         float: The energy value for the given amino acid and cosolute.
     """
 
-    treDict = {
+    tre_hongDict = {
         "A": 59.3,  "F": 57.1,  "L": 190.8, "I": 221.3, "V": 153.0,
         "P": 135.7, "M": 246.56, "G": 0, "S": -1.58, "T": 13.20,
         "Q": -23.98, "N": -123.1, "D": -67.6, "E": -86.7, "H": -68.0,
@@ -88,7 +88,7 @@ def amino_to_energy(amino, cosolute):
         "T": 17.54, "Y": -149.50, "Q": -2.75, "N": 51.57, "D": -85.45,
         "E": -74.20, "H": -17.16, "K": -34, "R": -30.74, "C": 0
     }
-    treoldDict = {
+    treDict = {
         "A": 33.25, "F": -17.88, "L": 96.17, "I": 79.66, "V": 96.79,
         "P": -94.67, "M": 29.19, "W": -206.30, "G": 0, "S": -0.98,
         "T": 26.32, "Y": -80.32, "Q": -36.34, "N": 48.67, "D": -96.54,
@@ -96,9 +96,9 @@ def amino_to_energy(amino, cosolute):
     }
 
     if cosolute == "trehalose":
-        return treDict[amino]
+        return tre_hongDict[amino]
     if cosolute == "trehaloseBack":
-        return treDict[amino] + 35
+        return tre_hongDict[amino] + 35
     if cosolute == "tmao":
         return tmaoDict[amino]
     if cosolute == "tmaoBack":
@@ -132,9 +132,9 @@ def amino_to_energy(amino, cosolute):
     if cosolute == "glycerolBack":
         return glyDict[amino] + 14
     if cosolute == "treold":
-        return treoldDict[amino]
+        return treDict[amino]
     if cosolute == "treoldBack":
-        return treoldDict[amino] + 62
+        return treDict[amino] + 62
 
 def extract_sequence(pdb_file):
     """
@@ -170,21 +170,29 @@ def three_to_one(residue):
     }
     return conversion_dict.get(residue, 'X')  # 'X' for unknown residues
 
-def get_tfe(seq, osmo):
+def get_tfe(seq, osmo, custom_tfe=None):
     """
     Computes the Total Free Energy (TFE) for a given sequence based on the osmolyte environment.
 
     Parameters:
         seq (str): The amino acid sequence.
-        osmo (str): The osmolyte environment.
+        osmo (str): The osmolytes of interest.
+        custom_tfe (dict, optional): A dictionary with custom TFE values for osmolytes.
 
     Returns:
         list: A list of TFE values for each amino acid in the sequence.
     """
-
     amino_acids = 'AFLIVPMGSTQNDEHKRCWY'
-    energy_list = [amino_to_energy(aa, osmo) for aa in amino_acids]
+    
+    # Use custom TFE values if provided
+    if custom_tfe and osmo in custom_tfe:
+        tfe_dict = custom_tfe[osmo]
+        energy_list = [tfe_dict.get(aa, 0) for aa in amino_acids]
+    else:
+        energy_list = [amino_to_energy(aa, osmo) for aa in amino_acids]
+    
     return [energy_list[amino_acids.index(aa)] for aa in seq]
+
 
 def get_pdb_info(pdb):
     """
@@ -217,7 +225,7 @@ def sasa_to_rasa(seq, sasa_list):
     amino_acids = 'AFLIVPMGSTQNDEHKRCWY'
     return [sasa_list[i] / max_sasa_list[amino_acids.index(seq[i])] for i in range(len(seq))]
 
-def protein_unfolded_dG(pdb, osmolytes, backbone=True):
+def protein_unfolded_dG(pdb, osmolytes, backbone=True, custom_tfe=None):
     """
     Computes the total free energy (dG) for the unfolded protein for one or multiple osmolytes.
 
@@ -225,15 +233,14 @@ def protein_unfolded_dG(pdb, osmolytes, backbone=True):
         pdb (str): Path to the PDB file.
         osmolytes (str or list): A single osmolyte or a list of osmolytes.
         backbone (bool): Whether to account for the protein backbone. Default = True.
+        custom_tfe (dict, optional): A dictionary with custom TFE values for osmolytes.
 
     Returns:
         dict: A dictionary where each key is an osmolyte, and the value is the total free energy.
     """
-
-    # Ensure osmolytes is a list
     if isinstance(osmolytes, str):
         osmolytes = [osmolytes]
-    
+
     seq = extract_sequence(pdb)
     results = {}
 
@@ -241,11 +248,14 @@ def protein_unfolded_dG(pdb, osmolytes, backbone=True):
         osmo = osmo.lower()
         if backbone:
             osmoBack = osmo + "Back"
-        results[osmo] = np.sum(get_tfe(seq, osmoBack))
+        else:
+            osmoBack = osmo
+        results[osmo] = np.sum(get_tfe(seq, osmoBack, custom_tfe))
     
     return results
 
-def protein_folded_dG(pdb, osmolytes, backbone=True):
+
+def protein_folded_dG(pdb, osmolytes, backbone=True, custom_tfe=None):
     """
     Computes the total free energy (dG) for the folded protein for one or multiple osmolytes.
 
@@ -253,15 +263,14 @@ def protein_folded_dG(pdb, osmolytes, backbone=True):
         pdb (str): Path to the PDB file.
         osmolytes (str or list): A single osmolyte or a list of osmolytes.
         backbone (bool): Whether to account for the protein backbone. Default = True.
+        custom_tfe (dict, optional): A dictionary with custom TFE values for osmolytes.
 
     Returns:
         dict: A dictionary where each key is an osmolyte, and the value is the total free energy.
     """
-
-    # Ensure osmolytes is a list
     if isinstance(osmolytes, str):
         osmolytes = [osmolytes]
-    
+
     sstraj = get_pdb_info(pdb)
     seq = sstraj[0]
     sasa = sstraj[1]
@@ -272,13 +281,16 @@ def protein_folded_dG(pdb, osmolytes, backbone=True):
         osmo = osmo.lower()
         if backbone:
             osmoBack = osmo + "Back"
-        tfe = get_tfe(seq, osmoBack)
+        else:
+            osmoBack = osmo
+        tfe = get_tfe(seq, osmoBack, custom_tfe)
         folded_tfe = np.sum([rasa[i] * tfe[i] for i in range(len(seq))])
         results[osmo] = folded_tfe
     
     return results
 
-def protein_ddG_folding(pdb, osmolytes, backbone=True, triplet=False):
+
+def protein_ddG_folding(pdb, osmolytes, backbone=True, triplet=False, custom_tfe=None):
     """
     Computes the change in free energy (dG) upon protein folding for one or multiple osmolytes.
 
@@ -287,17 +299,16 @@ def protein_ddG_folding(pdb, osmolytes, backbone=True, triplet=False):
         osmolytes (str or list): A single osmolyte or a list of osmolytes.
         backbone (bool): Whether to account for the protein backbone. Default = True.
         triplet (bool): Whether to return the triplet (folded, unfolded, and their difference). Default = False.
+        custom_tfe (dict, optional): A dictionary with custom TFE values for osmolytes.
 
     Returns:
         dict: A dictionary where each key is an osmolyte, and the value is either a tuple (folded_dG, unfolded_dG, dG_change) or the free energy difference.
     """
-    
-    # Ensure osmolytes is a list
     if isinstance(osmolytes, str):
         osmolytes = [osmolytes]
 
-    folded_dG = protein_folded_dG(pdb, osmolytes, backbone)
-    unfolded_dG = protein_unfolded_dG(pdb, osmolytes, backbone)
+    folded_dG = protein_folded_dG(pdb, osmolytes, backbone, custom_tfe)
+    unfolded_dG = protein_unfolded_dG(pdb, osmolytes, backbone, custom_tfe)
 
     results = {}
     for osmo in osmolytes:
@@ -307,3 +318,4 @@ def protein_ddG_folding(pdb, osmolytes, backbone=True, triplet=False):
             results[osmo] = folded_dG[osmo] - unfolded_dG[osmo]
     
     return results
+
