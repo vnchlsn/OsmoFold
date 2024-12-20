@@ -1,4 +1,4 @@
-# Welcome to OsmoFold v.0.1.0
+# Welcome to OsmoFold v.0.2.0
 
 Vincent Nicholson<sup>1</sup> and Thomas C. Boothby<sup>1</sup>
 
