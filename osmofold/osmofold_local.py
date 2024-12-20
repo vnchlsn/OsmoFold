@@ -95,9 +95,9 @@ def amino_to_energy(amino, cosolute):
         "E": -85.92, "H": -98.75, "K": -50.08, "R": -50.33, "C": 0
     }
 
-    if cosolute == "trehalose":
+    if cosolute == "trehalose_hong":
         return tre_hongDict[amino]
-    if cosolute == "trehaloseBack":
+    if cosolute == "trehalose_hongBack":
         return tre_hongDict[amino] + 35
     if cosolute == "tmao":
         return tmaoDict[amino]
@@ -131,9 +131,9 @@ def amino_to_energy(amino, cosolute):
         return glyDict[amino]
     if cosolute == "glycerolBack":
         return glyDict[amino] + 14
-    if cosolute == "treold":
+    if cosolute == "trehalose":
         return treDict[amino]
-    if cosolute == "treoldBack":
+    if cosolute == "trehaloseBack":
         return treDict[amino] + 62
 
 def extract_sequence(pdb_file):
@@ -206,8 +206,9 @@ def get_pdb_info(pdb):
     """
         
     PDB = SSTrajectory(pdb, pdb)
-    seq = PDB._SSTrajectory__single_protein_traj.get_amino_acid_sequence(oneletter=True)
-    sasa = PDB._SSTrajectory__single_protein_traj.get_all_SASA(mode='residue', stride=1)[0]
+
+    seq = PDB._SSTrajectory__get_all_proteins(PDB.traj, PDB._SSTrajectory__explicit_residue_checking).get_amino_acid_sequence(oneletter=True)
+    sasa = PDB._SSTrajectory__get_all_proteins(PDB.traj, PDB._SSTrajectory__explicit_residue_checking).get_all_SASA(mode='residue', stride=1)[0]
     return [seq, sasa]
 
 def sasa_to_rasa(seq, sasa_list):
@@ -318,4 +319,3 @@ def protein_ddG_folding(pdb, osmolytes, backbone=True, triplet=False, custom_tfe
             results[osmo] = folded_dG[osmo] - unfolded_dG[osmo]
     
     return results
-
