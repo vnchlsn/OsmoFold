@@ -226,7 +226,7 @@ def sasa_to_rasa(seq, sasa_list):
     amino_acids = 'AFLIVPMGSTQNDEHKRCWY'
     return [sasa_list[i] / max_sasa_list[amino_acids.index(seq[i])] for i in range(len(seq))]
 
-def protein_unfolded_dG(pdb, osmolytes, backbone=True, custom_tfe=None):
+def protein_unfolded_dG(pdb, osmolytes, backbone=True, custom_tfe=None, concentration=1.0):
     """
     Computes the total free energy (dG) for the unfolded protein for one or multiple osmolytes.
 
@@ -235,6 +235,7 @@ def protein_unfolded_dG(pdb, osmolytes, backbone=True, custom_tfe=None):
         osmolytes (str or list): A single osmolyte or a list of osmolytes.
         backbone (bool): Whether to account for the protein backbone. Default = True.
         custom_tfe (dict, optional): A dictionary with custom TFE values for osmolytes.
+        concentration (float): The concentration in molar to scale the result. Default = 1.0.
 
     Returns:
         dict: A dictionary where each key is an osmolyte, and the value is the total free energy.
@@ -251,12 +252,11 @@ def protein_unfolded_dG(pdb, osmolytes, backbone=True, custom_tfe=None):
             osmoBack = osmo + "Back"
         else:
             osmoBack = osmo
-        results[osmo] = np.sum(get_tfe(seq, osmoBack, custom_tfe))
-    
+        results[osmo] = concentration * np.sum(get_tfe(seq, osmoBack, custom_tfe))
+
     return results
 
-
-def protein_folded_dG(pdb, osmolytes, backbone=True, custom_tfe=None):
+def protein_folded_dG(pdb, osmolytes, backbone=True, custom_tfe=None, concentration=1.0):
     """
     Computes the total free energy (dG) for the folded protein for one or multiple osmolytes.
 
@@ -265,6 +265,7 @@ def protein_folded_dG(pdb, osmolytes, backbone=True, custom_tfe=None):
         osmolytes (str or list): A single osmolyte or a list of osmolytes.
         backbone (bool): Whether to account for the protein backbone. Default = True.
         custom_tfe (dict, optional): A dictionary with custom TFE values for osmolytes.
+        concentration (float): The concentration in molar to scale the result. Default = 1.0.
 
     Returns:
         dict: A dictionary where each key is an osmolyte, and the value is the total free energy.
@@ -276,7 +277,7 @@ def protein_folded_dG(pdb, osmolytes, backbone=True, custom_tfe=None):
     seq = sstraj[0]
     sasa = sstraj[1]
     rasa = sasa_to_rasa(seq, sasa)
-    
+
     results = {}
     for osmo in osmolytes:
         osmo = osmo.lower()
@@ -286,12 +287,11 @@ def protein_folded_dG(pdb, osmolytes, backbone=True, custom_tfe=None):
             osmoBack = osmo
         tfe = get_tfe(seq, osmoBack, custom_tfe)
         folded_tfe = np.sum([rasa[i] * tfe[i] for i in range(len(seq))])
-        results[osmo] = folded_tfe
-    
+        results[osmo] = concentration * folded_tfe
+
     return results
 
-
-def protein_ddG_folding(pdb, osmolytes, backbone=True, triplet=False, custom_tfe=None):
+def protein_ddG_folding(pdb, osmolytes, backbone=True, triplet=False, custom_tfe=None, concentration=1.0):
     """
     Computes the change in free energy (dG) upon protein folding for one or multiple osmolytes.
 
@@ -301,6 +301,7 @@ def protein_ddG_folding(pdb, osmolytes, backbone=True, triplet=False, custom_tfe
         backbone (bool): Whether to account for the protein backbone. Default = True.
         triplet (bool): Whether to return the triplet (folded, unfolded, and their difference). Default = False.
         custom_tfe (dict, optional): A dictionary with custom TFE values for osmolytes.
+        concentration (float): The concentration in molar to scale the result. Default = 1.0.
 
     Returns:
         dict: A dictionary where each key is an osmolyte, and the value is either a tuple (folded_dG, unfolded_dG, dG_change) or the free energy difference.
@@ -308,8 +309,8 @@ def protein_ddG_folding(pdb, osmolytes, backbone=True, triplet=False, custom_tfe
     if isinstance(osmolytes, str):
         osmolytes = [osmolytes]
 
-    folded_dG = protein_folded_dG(pdb, osmolytes, backbone, custom_tfe)
-    unfolded_dG = protein_unfolded_dG(pdb, osmolytes, backbone, custom_tfe)
+    folded_dG = protein_folded_dG(pdb, osmolytes, backbone, custom_tfe, concentration)
+    unfolded_dG = protein_unfolded_dG(pdb, osmolytes, backbone, custom_tfe, concentration)
 
     results = {}
     for osmo in osmolytes:
@@ -317,5 +318,5 @@ def protein_ddG_folding(pdb, osmolytes, backbone=True, triplet=False, custom_tfe
             results[osmo] = (folded_dG[osmo], unfolded_dG[osmo], folded_dG[osmo] - unfolded_dG[osmo])
         else:
             results[osmo] = folded_dG[osmo] - unfolded_dG[osmo]
-    
+
     return results
