@@ -35,26 +35,21 @@ General Installation
 
 To get started with OsmoFold, follow these steps:
 
-   1. Set up a Conda environment (Python\>=3.10):
-      
-      ::
-         conda create -n osmofold python=3.12
+   1. Set up a Conda environment (Python\>=3.10)::
+         
+      conda create -n osmofold python=3.12
 
-      
-   2. Install numpy, mdtraj, and soursop:
+   2. Install numpy, mdtraj, and soursop::
 
-      ::
-         pip install numpy
-         pip install mdtraj
-         pip install soursop
+      pip install numpy
+      pip install mdtraj
+      pip install soursop
 
+   3. Pull and install OsmoFold::
 
-   3. Pull and install OsmoFold:
-      
-      ::
-         git pull https://github.com/vnchlsn/OsmoFold
-         cd OsmoFold
-         pip install .
+      git pull https://github.com/vnchlsn/OsmoFold
+      cd OsmoFold
+      pip install .
 
 
 Version History 
