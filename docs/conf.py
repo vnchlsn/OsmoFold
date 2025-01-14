@@ -14,6 +14,7 @@ extensions = [
     "sphinx.ext.viewcode",  # Add links to source code
 ]
 
+master_doc = "index"
 exclude_patterns = []  # Files and directories to ignore
 
 # -- Options for HTML output -------------------------------------------------
