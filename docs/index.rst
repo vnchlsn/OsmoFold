@@ -1,10 +1,7 @@
 .. OsmoFold documentation master file
 
-Welcome to OsmoFold's Documentation!
-=====================================
-
 Overview
---------
+========
 
 Vincent Nicholson¹ and Thomas C. Boothby¹
 
@@ -37,23 +34,27 @@ General Installation
 --------------------
 
 To get started with OsmoFold, follow these steps:
-1. Set up a Conda environment (Python\>=3.10):
-   .. code-block:: bash
-      conda create -n osmofold python=3.12
+
+   1. Set up a Conda environment (Python\>=3.10):
+
+      .. code-block:: bash
+         conda create -n osmofold python=3.12
 
       
-2. Install numpy, mdtraj, and soursop:
-   .. code-block:: bash
-      pip install numpy
-      pip install mdtraj
-      pip install soursop
+   2. Install numpy, mdtraj, and soursop:
+
+      .. code-block:: bash
+         pip install numpy
+         pip install mdtraj
+         pip install soursop
 
 
-3. Pull and install OsmoFold
-   .. code-block:: bash
-      git pull https://github.com/vnchlsn/OsmoFold
-      cd OsmoFold
-      pip install .
+   3. Pull and install OsmoFold:
+   
+      .. code-block:: bash
+         git pull https://github.com/vnchlsn/OsmoFold
+         cd OsmoFold
+         pip install .
 
 
 Version History 
