@@ -1,7 +1,7 @@
 # Read the Docs configuration file
 # See https://docs.readthedocs.io/en/stable/config-file/v2.html for details
 
-Version: 2
+version: 2
 
 # Build tools versions
 build:
