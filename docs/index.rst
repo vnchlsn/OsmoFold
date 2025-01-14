@@ -35,11 +35,13 @@ General Installation
 
 To get started with OsmoFold, follow these steps:
 
-   1. Set up a Conda environment (Python\>=3.10):
+   1. Set up and activate a Conda environment (Python\>=3.10):
          
       .. code-block:: python   
          
          conda create -n osmofold python=3.12
+
+         conda activate osmofold
 
    2. Install numpy, mdtraj, and soursop:
       
@@ -60,6 +62,14 @@ To get started with OsmoFold, follow these steps:
          cd OsmoFold
          
          pip install .
+
+   4. [Optional] Perform unit tests:
+
+      .. code-block:: python
+
+         pip install pytest
+
+         pytest ./test
 
 Version History 
 ---------------
