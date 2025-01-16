@@ -63,12 +63,10 @@ OsmoFold does NOT currently support installation via:
 
         .. code-block:: bash
 
-         poetry install
+         poetry install osmofold
 
     3. Pipenv
 
         .. code-block:: bash
         
-         pipenv install
-
-
+         pipenv install osmofold

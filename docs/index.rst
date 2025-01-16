@@ -57,3 +57,4 @@ First public release. Support for basic ΔG calculations of monomeric proteins (
    :caption: Table of Contents
 
    installation
+   usage
