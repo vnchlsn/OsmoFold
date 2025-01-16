@@ -3,6 +3,9 @@
 Overview
 ========
 
+An Introduction to OsmoFold
+---------------------------
+
 Vincent Nicholson¹ and Thomas C. Boothby¹
 
 ¹ Department of Molecular Biology, University of Wyoming, Laramie WY
