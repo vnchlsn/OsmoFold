@@ -8,7 +8,7 @@ Quick Start
 
 This guide will help you quickly get started with OsmoFold. Use the script below to calculate the ΔΔG of osmolyte-induced protein folding and unfolding (commonly referred to as the "m-value").
 
-**Note:** Before proceeding, ensure that you have installed OsmoFold correctly by referring to the :ref:`installation`.
+**Note:** Before proceeding, ensure that you have installed OsmoFold correctly by referring to the :ref:`Installation`.
 
 .. code-block:: python
 
