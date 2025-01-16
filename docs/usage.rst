@@ -28,7 +28,7 @@ Explanation of Parameters
 - **`pdb`**: Path to the input PDB file of the protein.
 - **`osmolytes`**: List of osmolytes (e.g., "trehalose", "tmao", "betaine") to simulate their effects on protein folding.
 - **`concentration`**: Concentration of the osmolyte(s) in molar (M). Default is `1.0` M.
-- **`triplet`**: If `True`, the output will be a tuple containing the folded ΔG, unfolded ΔG, and ΔΔG. If `False`, only the ΔΔG (a float) will be returned. Default is `True`.
+- **`triplet`**: If `True`, the output for each osmolyte will be a tuple containing the folded ΔG, unfolded ΔG, and ΔΔG. If `False`, only the ΔΔG (a float) will be returned. Default is `True`.
 
 Output
 
@@ -43,6 +43,6 @@ Example Output:
 
    {'trehalose': -50.0, 'tmao': -35.2, 'betaine': 12.5}
 
-In this example, `trehalose` and `tmao` stabilize the folded state, while `betaine` stabilizes the unfolded state.
+In this example, `trehalose` and `tmao` stabilize the folded state (with trehalose doing so more robustly), while `betaine` stabilizes the unfolded state.
 
 For advanced usage and additional functionality, consult the full documentation or reach out to Vincent (`vnichol2@uwyo.edu`).
