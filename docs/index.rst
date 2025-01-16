@@ -52,9 +52,6 @@ Added support for mulithreading / batch processing of monomeric proteins
 
 First public release. Support for basic ΔG calculations of monomeric proteins (PDB only)
 
-Contents
---------
-
 .. toctree::
    :maxdepth: 2
    :caption: Table of Contents
