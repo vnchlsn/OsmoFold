@@ -23,14 +23,14 @@ This guide will help you quickly get started with OsmoFold. Use the script below
 
    print(output)
 
-### Explanation of Parameters
+Explanation of Parameters
 
 - **`pdb`**: Path to the input PDB file of the protein.
 - **`osmolytes`**: List of osmolytes (e.g., "trehalose", "tmao", "betaine") to simulate their effects on protein folding.
 - **`concentration`**: Concentration of the osmolyte(s) in molar (M). Default is `1.0` M.
 - **`triplet`**: If `True`, the output will be a tuple containing the folded ΔG, unfolded ΔG, and ΔΔG. If `False`, only the ΔΔG (a float) will be returned. Default is `True`.
 
-### Output
+Output
 
 The results from `protein_ddG_folding` are reported in units of **calories per mole of protein (cal/mol)**:
 
@@ -45,4 +45,4 @@ Example Output:
 
 In this example, `trehalose` and `tmao` stabilize the folded state, while `betaine` stabilizes the unfolded state.
 
-For advanced usage and additional functionality, consult the full documentation or reach out to the OsmoFold team.
+For advanced usage and additional functionality, consult the full documentation or reach out to Vincent (`vnichol2@uwyo.edu`).
