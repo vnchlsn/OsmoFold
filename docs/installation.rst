@@ -16,6 +16,9 @@ To install OsmoFold, follow these steps:
 
       conda activate osmofold
 
+   *Note: The use of an environment manager such as Conda is not strictly required, but is highly reccomended. 
+   I can not guarentee successful installation on an unclean environment.*
+
 2. **Install dependencies:**
 
    Use the following commands to install the required libraries:
