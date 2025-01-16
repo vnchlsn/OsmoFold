@@ -33,49 +33,6 @@ In short, OsmoFold will quantitatively assess the impact of several osmolytes on
 
 In general, **OsmoFold should be used to support experimental data, not replace it**.
 
-General Installation
---------------------
-
-To get started with OsmoFold, follow these steps:
-
-   1. Set up and activate a Conda environment (Python\>=3.10):
-         
-      .. code-block:: python   
-         
-         conda create -n osmofold python=3.12
-
-         conda activate osmofold
-
-   2. Install numpy, mdtraj, and soursop:
-      
-      .. code-block:: python
-         
-         pip install numpy
-         
-         pip install mdtraj
-         
-         pip install soursop
-
-   3. Pull and install OsmoFold:
-
-      .. code-block:: python
-
-         git clone https://github.com/vnchlsn/OsmoFold
-         
-         cd OsmoFold
-         
-         pip install .
-
-   4. [Optional] Perform unit tests:
-
-      .. code-block:: python
-
-         pip install pytest
-
-         cd test
-
-         pytest
-
 Version History
 ---------------
 
@@ -103,4 +60,3 @@ Contents
    :caption: Table of Contents
 
    installation
-   usage
