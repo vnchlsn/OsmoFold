@@ -21,7 +21,7 @@ If you haven't already done so, we recommend reading the following literature:
 
 Below are some recent papers, preprints, and reviews that cover this method or an adapted version of it. They might be useful for your understanding of the protocol:
 
-   * `Disordered proteins interact with the chemical environment to tune their protective function during drying <https://elifesciences.org/reviewed-preprints/97231>`_
+   * `Disordered proteins interact with the chemical environment to tune their protective function during drying <https://elifesciences.org/articles/97231>`_
    * `LEA_4 motifs function alone and in conjunction with synergistic cosolutes to protect a labile enzyme during desiccation <https://www.biorxiv.org/content/10.1101/2024.09.04.611296v1.full.pdf>`_
    * `Osmolyte-IDP Interactions During Desiccation <https://www.sciencedirect.com/science/article/pii/S1877117324001765?via%3Dihub>`_
 
@@ -60,7 +60,7 @@ To get started with OsmoFold, follow these steps:
 
       .. code-block:: python
 
-         git pull https://github.com/vnchlsn/OsmoFold
+         git clone https://github.com/vnchlsn/OsmoFold
          
          cd OsmoFold
          
@@ -76,9 +76,24 @@ To get started with OsmoFold, follow these steps:
 
          pytest
 
-Version History 
+Version History
 ---------------
-WIP
+
+* 1/16/25 - OsmoFold v0.2.2
+
+Public release of unit tests for all current functionality
+
+* 1/8/25 - OsmoFold v0.2.1
+
+Added support for ΔG calculations from sequence with user-provided SASA values
+
+* 12/30/24 - OsmoFold v0.2.0
+
+Added support for mulithreading / batch processing of monomeric proteins
+
+* 06/18/24 - OsmoFold v0.1.0
+
+First public release. Support for basic ΔG calculations of monomeric proteins (PDB only)
 
 Contents
 --------
