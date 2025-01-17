@@ -4,7 +4,7 @@ from osmofold import parallel
 import os
 
 # Define a mock function that is picklable
-def mock_process_pdb(directory, osmolytes, backbone, custom_tfe, pdb_file):
+def mock_process_pdb(directory, osmolytes, backbone, custom_tfe, pdb_file, concentration = 1.0):
     return pdb_file, {"protein_length": 10}
 
 class TestProcessPDB(unittest.TestCase):
@@ -52,7 +52,7 @@ class TestBatchProcessPDBs(unittest.TestCase):
 
         # Properly replace process_pdb with a *real* function (not a MagicMock)
         with patch("osmofold.parallel.process_pdb", new=mock_process_pdb):
-            result = parallel.batch_process_pdbs(directory, osmolytes, save_csv=False, num_workers=2)
+            result = parallel.batch_process_pdbs(directory, osmolytes, save_csv=False, num_workers=2, concentration=1.0)
 
         self.assertEqual(result, expected_output)
 

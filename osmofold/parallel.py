@@ -6,14 +6,14 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 import datetime
 import csv
 
-def process_pdb(directory, osmolytes, backbone, custom_tfe, pdb_file):
+def process_pdb(directory, osmolytes, backbone, custom_tfe, pdb_file, concentration = 1.0):
     pdb_path = os.path.join(directory, pdb_file)
     try:
         sequence = extract_sequence(pdb_path)
         protein_length = len(sequence)
         results = {"protein_length": protein_length, "osmolytes": {}}
 
-        osmolyte_results = protein_ddG_folding(pdb_path, osmolytes=osmolytes, backbone=backbone, custom_tfe=custom_tfe, triplet=True)
+        osmolyte_results = protein_ddG_folding(pdb_path, osmolytes=osmolytes, backbone=backbone, custom_tfe=custom_tfe, triplet=True, concentration=concentration)
         for osmolyte in osmolytes:
             dG_unfolded, dG_folded, ddG = osmolyte_results[osmolyte]
             results["osmolytes"][osmolyte] = {
@@ -26,7 +26,7 @@ def process_pdb(directory, osmolytes, backbone, custom_tfe, pdb_file):
         print(f"Error processing {pdb_file}: {e}")
         return pdb_file, {"error": str(e)}
 
-def batch_process_pdbs(directory, osmolytes, backbone=True, custom_tfe=None, save_csv=True, num_workers=1):
+def batch_process_pdbs(directory, osmolytes, backbone=True, custom_tfe=None, concentration = 1.0, save_csv=True, num_workers=1):
     """
     Batch processes PDB files in a directory for specified osmolyte analyses with parallel processing.
     """
@@ -39,7 +39,7 @@ def batch_process_pdbs(directory, osmolytes, backbone=True, custom_tfe=None, sav
 
     results = {}
     with ProcessPoolExecutor(max_workers=num_workers) as executor:
-        futures = {executor.submit(process_pdb, directory, osmolytes, backbone, custom_tfe, pdb_file): pdb_file for pdb_file in pdb_files}
+        futures = {executor.submit(process_pdb, directory, osmolytes, backbone, custom_tfe, pdb_file, concentration): pdb_file for pdb_file in pdb_files}
         for future in as_completed(futures):
             pdb_file, result = future.result()
             results[pdb_file] = result

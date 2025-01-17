@@ -61,7 +61,8 @@ Use the script below to batch process pdbs stored in the same folder. Unlike the
          folder="path/to/pdbs", 
          osmolytes=["trehalose", "tmao", "betaine"], 
          save_csv = True
-         num_workers = 8
+         num_workers = 8,
+         concentration = 1.0
       )
    
 *Note: This `if __name__ == "__main__"` block is required for correct execution of batch processing.*
@@ -72,6 +73,7 @@ Explanation of Parameters
 - **`osmolytes`**: List of osmolytes (e.g., "trehalose", "tmao", "betaine") to simulate their effects on protein folding.
 - **`save_csv`**: Dictates whether to save the results to the local directory as a csv. Default is `True`.
 - **`num_workers`**: The number of CPU cores that will be dedicated to running predictions. A safe bet for modern computers is 8. Default is `1`.
+- **`concentration`**: Concentration of the osmolyte(s) in molar (M). Default is `1.0` M.
 
 Output
 
@@ -82,7 +84,9 @@ For each protien-osmolyte combination, a new row will be created in the output c
 - **`osmolyte`**: The osmolyte being tested.
 - **`dG_Unfolded`**: The effect of the osmolyte on the free energy protein's unfolded state (assumes maximum solvent accessible surface area).
 - **`dG_Folded`**: The effect of the osmolyte on the free energy protein's folded state (calculates solvent accessible surface areas from the provided pdb).
-- **`ddG_Folding`**: The difference between dG_Folded and dG_Unfolded. Negative values indicate stabilization of the folded state. Positive values indicate stabilization of the unfolded state.
+- **`ddG_Folding`**: The difference between ΔG_Folded and ΔG_Unfolded. Negative values indicate stabilization of the folded state. Positive values indicate stabilization of the unfolded state.
 - **`error`**: Any errors that were thrown in the computation of that protein-osmolyte combination. For a successful prediction, should be `N/A`.
+
+The results for all ΔG values are reported in units of **calories per mole of protein (cal/mol)**
 
 *For advanced usage and additional functionality, consult the full documentation or reach out to Vincent (`vnichol2@uwyo.edu`).*
