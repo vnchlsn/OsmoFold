@@ -63,6 +63,8 @@ Use the script below to batch process pdbs stored in the same folder. Unlike the
          save_csv = True
          num_workers = 8
       )
+   
+*Note: This `if __name__ == "__main__"` block is required for correct execution of batch processing.*
 
 Explanation of Parameters
 
