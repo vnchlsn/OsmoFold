@@ -15,7 +15,7 @@ def process_pdb(directory, osmolytes, backbone, custom_tfe, pdb_file, concentrat
 
         osmolyte_results = protein_ddG_folding(pdb_path, osmolytes=osmolytes, backbone=backbone, custom_tfe=custom_tfe, triplet=True, concentration=concentration)
         for osmolyte in osmolytes:
-            dG_unfolded, dG_folded, ddG = osmolyte_results[osmolyte]
+            dG_folded, dG_unfolded, ddG = osmolyte_results[osmolyte]
             results["osmolytes"][osmolyte] = {
                 "dG_Folded": dG_folded,
                 "dG_Unfolded": dG_unfolded,
@@ -72,8 +72,8 @@ def save_results_to_csv(results):
 
             for osmolyte, values in osmolyte_results.get("osmolytes", {}).items():
                 # Extract dG_Unfolded, dG_Folded, and ddG_Folding from the results
-                dG_Unfolded = values.get("dG_Unfolded", "N/A")
                 dG_Folded = values.get("dG_Folded", "N/A")
+                dG_Unfolded = values.get("dG_Unfolded", "N/A")
                 ddG_Folding = values.get("ddG_Folding", "N/A")
 
                 writer.writerow([pdb_file, protein_length, osmolyte, dG_Unfolded, dG_Folded, ddG_Folding, "N/A"])
