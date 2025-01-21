@@ -30,8 +30,8 @@ class TestProcessPDB(unittest.TestCase):
         expected_output = (pdb_file, {
             "protein_length": 10,
             "osmolytes": {
-                "TMAO": {"dG_Folded": -3.0, "dG_Unfolded": -5.0, "ddG_Folding": 2.0},
-                "Urea": {"dG_Folded": -2.5, "dG_Unfolded": -4.5, "ddG_Folding": 2.0}
+                "TMAO": {"dG_Folded": -5.0, "dG_Unfolded": -3.0, "ddG_Folding": 2.0},
+                "Urea": {"dG_Folded": -4.5, "dG_Unfolded": -2.5, "ddG_Folding": 2.0}
             }
         })
         
