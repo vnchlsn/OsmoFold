@@ -2,6 +2,9 @@
 # See https://docs.readthedocs.io/en/stable/config-file/v2.html for details
 
 version: 2
+sphinx:
+  # Path to your Sphinx configuration file.
+  configuration: docs/conf.py
 
 # Build tools versions
 build:
