@@ -47,14 +47,14 @@ Example Output:
 
 In this example, `trehalose` and `tmao` stabilize the folded state (with trehalose doing so more robustly), while `betaine` stabilizes the unfolded state.
 
-Using Custom Solvent Accessible Surfaec Area (SASA) Values
+Using Custom Solvent Accessible Surface Area (SASA) Values
 ------------------------
 
-The default OsmoFold methods use `SOURSOP <https://github.com/holehouse-lab/soursop>`_, a software suite from Alex Holehouse and Rohit Pappu, to calculate Solvent Accessible Surfaec Area (SASA) values.
+The default OsmoFold methods use `SOURSOP <https://github.com/holehouse-lab/soursop>`_, a software suite from Alex Holehouse and Rohit Pappu, to calculate Solvent Accessible Surface Area (SASA) values.
 
-However, OsmoFold does offer users the option to use SASA values calculated via other means. As a result, this additional functaionality does not require a .pdb file to execute.
+However, OsmoFold does offer users the option to use SASA values calculated via other means. As a result, this additional functionality does not require a .pdb file to execute.
 
-Below is an examlpe of calculating the ΔΔG of a protein using custom SASA values:
+Below is an example of calculating the ΔΔG of a protein using custom SASA values:
 
 .. code-block:: python
 
@@ -106,7 +106,7 @@ Use the script below to batch process pdbs stored in the same folder. Unlike the
       batch_process_pdbs(
          folder="path/to/pdbs", 
          osmolytes=["trehalose", "tmao", "betaine"], 
-         save_csv = True
+         save_csv = True,
          num_workers = 8,
          concentration = 1.0
       )
@@ -115,7 +115,7 @@ Use the script below to batch process pdbs stored in the same folder. Unlike the
 
 Explanation of Parameters
 
-- **`folder`**: Path to the folder containing the pdbs you with to test. As before, each should be in the .pdb format (not .cif) and contain monomeric proteins with no non-protein atoms.
+- **`folder`**: Path to the folder containing the pdbs you wish to test. As before, each should be in the .pdb format (not .cif) and contain monomeric proteins with no non-protein atoms.
 - **`osmolytes`**: List of osmolytes (e.g., "trehalose", "tmao", "betaine") to simulate their effects on protein folding.
 - **`save_csv`**: Dictates whether to save the results to the local directory as a csv. Default is `True`.
 - **`num_workers`**: The number of CPU cores that will be dedicated to running predictions. A safe bet for modern computers is 8. Default is `1`.
@@ -123,7 +123,7 @@ Explanation of Parameters
 
 Output
 
-For each protien-osmolyte combination, a new row will be created in the output csv, corresponding to the following columns.
+For each protein-osmolyte combination, a new row will be created in the output csv, corresponding to the following columns.
 
 - **`PDB name`**: The name of the pdb being tested.
 - **`protein length`**: The length of the protein being tested.
