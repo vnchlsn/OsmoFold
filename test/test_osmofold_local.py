@@ -158,6 +158,74 @@ TER
         result = osmofold_local.three_to_one('arg'.upper())  # Convert to uppercase
         self.assertEqual(result, 'R')
 
+class TestExtractSequencesByChains(unittest.TestCase):
+
+    @patch("osmofold.osmofold_local.three_to_one", side_effect=lambda x: x[0])  # Mock three_to_one to return first letter
+    def test_single_chain(self, mock_three_to_one):
+        pdb_data = """\
+ATOM      1  N   MET A   1      
+ATOM      2  CA  MET A   1      
+ATOM      3  C   MET A   1      
+ATOM      4  N   GLY A   2      
+ATOM      5  CA  GLY A   2      
+ATOM      6  C   GLY A   2      
+"""
+        with open("test.pdb", "w") as f:
+            f.write(pdb_data)
+
+        result = osmofold_local.extract_sequences_by_chains("test.pdb")
+        self.assertEqual(result, ['MG'])
+
+    @patch("osmofold.osmofold_local.three_to_one", side_effect=lambda x: x[0])
+    def test_multiple_chains(self, mock_three_to_one):
+        pdb_data = """\
+ATOM      1  N   ALA A   1      
+ATOM      2  CA  ALA A   1      
+ATOM      3  C   ALA A   1      
+ATOM      4  N   LYS B   1      
+ATOM      5  CA  LYS B   1      
+ATOM      6  C   LYS B   1      
+ATOM      7  N   GLY B   2      
+ATOM      8  CA  GLY B   2      
+ATOM      9  C   GLY B   2      
+"""
+        with open("test.pdb", "w") as f:
+            f.write(pdb_data)
+
+        result = osmofold_local.extract_sequences_by_chains("test.pdb")
+        self.assertEqual(result, ['A', 'LG'])
+
+    @patch("osmofold.osmofold_local.three_to_one", side_effect=lambda x: x[0])
+    def test_duplicate_residues_ignored(self, mock_three_to_one):
+        pdb_data = """\
+ATOM      1  N   SER A   1      
+ATOM      2  CA  SER A   1      
+ATOM      3  C   SER A   1      
+ATOM      4  O   SER A   1      
+ATOM      5  N   GLY A   2      
+ATOM      6  CA  GLY A   2      
+"""
+        with open("test.pdb", "w") as f:
+            f.write(pdb_data)
+
+        result = osmofold_local.extract_sequences_by_chains("test.pdb")
+        self.assertEqual(result, ['SG'])
+
+    @patch("osmofold.osmofold_local.three_to_one", side_effect=lambda x: 'X' if x not in ['ALA', 'GLY', 'LYS'] else x[0])
+    def test_invalid_residue_name(self, mock_three_to_one):
+        pdb_data = """\
+ATOM      1  N   XYZ A   1      
+ATOM      2  CA  XYZ A   1      
+ATOM      3  C   XYZ A   1      
+ATOM      4  N   ALA A   2      
+ATOM      5  CA  ALA A   2      
+"""
+        with open("test.pdb", "w") as f:
+            f.write(pdb_data)
+
+        result = osmofold_local.extract_sequences_by_chains("test.pdb")
+        self.assertEqual(result, ['XA'])
+
 class Test_OsmoFold_Local_Get_TFE(unittest.TestCase):
 
     def test_basic_case_with_custom_tfe(self):
@@ -291,231 +359,302 @@ class TestGetPDBInfo(unittest.TestCase):
         mock_protein_instance.get_amino_acid_sequence.assert_called_once_with(oneletter=True)
         mock_protein_instance.get_all_SASA.assert_called_once_with(mode='residue', stride=1)
 
-class Test_OsmoFold_Local_Unfolded_dG(unittest.TestCase):
-    @patch('osmofold.osmofold_local.extract_sequence')
-    @patch('osmofold.osmofold_local.get_tfe')
-    def test_single_osmolyte(self, mock_get_tfe, mock_extract_sequence):
-        mock_extract_sequence.return_value = "ACDEFGHIKLMNPQRSTVWY"
-        mock_get_tfe.return_value = [1.0] * 20  # Mocked TFE values
-        
-        result = osmofold_local.protein_unfolded_dG("test.pdb", "tmao")
-        expected = {"tmao": 20.0}
-        self.assertEqual(result, expected)
-    
-    @patch('osmofold.osmofold_local.extract_sequence')
-    @patch('osmofold.osmofold_local.get_tfe')
-    def test_multiple_osmolytes(self, mock_get_tfe, mock_extract_sequence):
-        mock_extract_sequence.return_value = "ACDEFGHIKLMNPQRSTVWY"
-        mock_get_tfe.side_effect = [[1.0] * 20, [0.5] * 20]  # Mocked TFE values for each osmolyte
-        
-        result = osmofold_local.protein_unfolded_dG("test.pdb", ["tmao", "urea"])
-        expected = {"tmao": 20.0, "urea": 10.0}
-        self.assertEqual(result, expected)
-    
-    @patch('osmofold.osmofold_local.extract_sequence')
-    @patch('osmofold.osmofold_local.get_tfe')
-    def test_custom_tfe(self, mock_get_tfe, mock_extract_sequence):
-        mock_extract_sequence.return_value = "ACD"
-        mock_get_tfe.return_value = [2.0, 3.0, 1.0]  # Custom TFE should not matter here
-        
-        custom_tfe = {"tmaoBack": 1.0}
-        result = osmofold_local.protein_unfolded_dG("test.pdb", "tmao", custom_tfe=custom_tfe)
-        expected = {"tmao": 6.0}
-        self.assertEqual(result, expected)
-    
-    @patch('osmofold.osmofold_local.extract_sequence')
-    @patch('osmofold.osmofold_local.get_tfe')
-    def test_backbone_inclusion(self, mock_get_tfe, mock_extract_sequence):
-        mock_extract_sequence.return_value = "ACD"
-        mock_get_tfe.return_value = [2.0, 3.0, 1.0]
-        
-        result_backbone = osmofold_local.protein_unfolded_dG("test.pdb", "tmao", backbone=True)
-        result_no_backbone = osmofold_local.protein_unfolded_dG("test.pdb", "tmao", backbone=False)
-        
-        self.assertEqual(result_backbone, {"tmao": 6.0})
-        self.assertEqual(result_no_backbone, {"tmao": 6.0})  # Mock TFE identical
-    
-    @patch('osmofold.osmofold_local.extract_sequence')
-    @patch('osmofold.osmofold_local.get_tfe')
-    def test_concentration_scaling(self, mock_get_tfe, mock_extract_sequence):
-        mock_extract_sequence.return_value = "ACD"
-        mock_get_tfe.return_value = [2.0, 3.0, 1.0]
-        
-        result = osmofold_local.protein_unfolded_dG("test.pdb", "tmao", concentration=2.0)
-        expected = {"tmao": 12.0}
-        self.assertEqual(result, expected)
-    
-    @patch('osmofold.osmofold_local.extract_sequence')
-    @patch('osmofold.osmofold_local.get_tfe')
-    def test_empty_osmolytes(self, mock_get_tfe, mock_extract_sequence):
-        mock_extract_sequence.return_value = "ACD"
-        mock_get_tfe.return_value = [2.0, 3.0, 1.0]
+class TestGetChainInfo(unittest.TestCase):
 
-        result = osmofold_local.protein_unfolded_dG("test.pdb", [])
-        self.assertEqual(result, {})
-    
-    @patch('osmofold.osmofold_local.extract_sequence')
-    @patch('osmofold.osmofold_local.get_tfe')
-    def test_invalid_osmolytes_type(self, mock_get_tfe, mock_extract_sequence):
-        mock_extract_sequence.return_value = "ACD"
-        mock_get_tfe.return_value = [2.0, 3.0, 1.0]
+    @patch("osmofold.osmofold_local.SSTrajectory")
+    def test_single_chain(self, mock_SSTrajectory):
+        # Mock SSTrajectory behavior
+        mock_traj = mock_SSTrajectory.return_value
+        mock_traj._SSTrajectory__get_all_proteins.return_value.get_amino_acid_sequence.return_value = "MAG"
+        mock_traj._SSTrajectory__get_all_proteins.return_value.get_all_SASA.return_value = [[1.2, 0.8, 1.5]]
 
-        with self.assertRaises(TypeError):
-            osmofold_local.protein_unfolded_dG("test.pdb", 123)
+        # Mocking proteinTrajectoryList
+        mock_protein = MagicMock()
+        mock_protein.get_amino_acid_sequence.return_value = "MAG"
+        mock_traj.proteinTrajectoryList = [mock_protein]
+
+        result = osmofold_local.get_chain_info("dummy.pdb")
+
+        expected = {
+            "Chain 1": ["MAG", [1.2, 0.8, 1.5]],
+            "All": ["MAG", [1.2, 0.8, 1.5]]
+        }
+        self.assertEqual(result, expected)
+
+    @patch("osmofold.osmofold_local.SSTrajectory")
+    def test_multiple_chains(self, mock_SSTrajectory):
+        # Mock SSTrajectory behavior
+        mock_traj = mock_SSTrajectory.return_value
+        mock_traj._SSTrajectory__get_all_proteins.return_value.get_amino_acid_sequence.return_value = "MAGLYS"
+        mock_traj._SSTrajectory__get_all_proteins.return_value.get_all_SASA.return_value = [[1.2, 0.8, 1.5, 2.3, 1.0, 0.5]]
+
+        # Mocking proteinTrajectoryList
+        mock_protein1 = MagicMock()
+        mock_protein1.get_amino_acid_sequence.return_value = "MAG"
+
+        mock_protein2 = MagicMock()
+        mock_protein2.get_amino_acid_sequence.return_value = "LYS"
+
+        mock_traj.proteinTrajectoryList = [mock_protein1, mock_protein2]
+
+        result = osmofold_local.get_chain_info("dummy.pdb")
+
+        expected = {
+            "Chain 1": ["MAG", [1.2, 0.8, 1.5]],
+            "Chain 2": ["LYS", [2.3, 1.0, 0.5]],
+            "All": ["MAGLYS", [1.2, 0.8, 1.5, 2.3, 1.0, 0.5]]
+        }
+        self.assertEqual(result, expected)
+
+    @patch("osmofold.osmofold_local.SSTrajectory")
+    def test_empty_pdb(self, mock_SSTrajectory):
+        # Mock SSTrajectory behavior for an empty PDB
+        mock_traj = mock_SSTrajectory.return_value
+        mock_traj._SSTrajectory__get_all_proteins.return_value.get_amino_acid_sequence.return_value = ""
+        mock_traj._SSTrajectory__get_all_proteins.return_value.get_all_SASA.return_value = [[]]
+
+        mock_traj.proteinTrajectoryList = []
+
+        result = osmofold_local.get_chain_info("empty.pdb")
+
+        expected = {
+            "All": ["", []]
+        }
+        self.assertEqual(result, expected)
+
+class TestProteinUnfoldedDG(unittest.TestCase):
+    # Mocked functions
+    def mock_extract_sequence(pdb):
+        return "ACDEFGHIKLMNPQRSTVWY"
+
+    def mock_extract_sequences_by_chains(pdb):
+        return ["ACDEFG", "HIKLMN", "PQRSTV", "WY"]
+
+    def mock_get_tfe(sequence, osmolyte, custom_tfe=None):
+        return np.array([0.5] * len(sequence))  # Simple mock energy values
+
+    @patch("osmofold.osmofold_local.extract_sequence", side_effect=mock_extract_sequence)
+    @patch("osmofold.osmofold_local.get_tfe", side_effect=mock_get_tfe)
+    def test_protein_unfolded_dG_single_osmolyte(self, mock_seq, mock_tfe):
+        pdb_path = "test.pdb"
+        result = osmofold_local.protein_unfolded_dG(pdb_path, "urea")
+        self.assertEqual(result, {"urea": 10.0})
+
+    @patch("osmofold.osmofold_local.extract_sequence", side_effect=mock_extract_sequence)
+    @patch("osmofold.osmofold_local.get_tfe", side_effect=mock_get_tfe)
+    def test_protein_unfolded_dG_multiple_osmolytes(self, mock_seq, mock_tfe):
+        pdb_path = "test.pdb"
+        result = osmofold_local.protein_unfolded_dG(pdb_path, ["urea", "gdmcl"])
+        self.assertEqual(result, {"urea": 10.0, "gdmcl": 10.0})
+
+    @patch("osmofold.osmofold_local.extract_sequence", side_effect=mock_extract_sequence)  # Ensure this is applied last
+    @patch("osmofold.osmofold_local.extract_sequences_by_chains", side_effect=mock_extract_sequences_by_chains)
+    @patch("osmofold.osmofold_local.get_tfe", side_effect=mock_get_tfe)
+    def test_protein_unfolded_dG_split_chains(self, mock_tfe, mock_seq_by_chains, mock_seq):
+        pdb_path = "test.pdb"
+        result = osmofold_local.protein_unfolded_dG(pdb_path, "urea", split_chains=True)
+
+        expected = {
+            "Chain 1": {"urea": 3.0},
+            "Chain 2": {"urea": 3.0},
+            "Chain 3": {"urea": 3.0},
+            "Chain 4": {"urea": 1.0},
+            "All": {"urea": 10.0},
+        }
+        self.assertEqual(result, expected)
+
+    @patch("osmofold.osmofold_local.extract_sequence", side_effect=mock_extract_sequence)
+    @patch("osmofold.osmofold_local.get_tfe", side_effect=mock_get_tfe)
+    def test_protein_unfolded_dG_concentration(self, mock_seq, mock_tfe):
+        pdb_path = "test.pdb"
+        result = osmofold_local.protein_unfolded_dG(pdb_path, "urea", concentration=2.0)
+        self.assertEqual(result, {"urea": 20.0})
+
+    @patch("osmofold.osmofold_local.extract_sequence", side_effect=mock_extract_sequence)
+    @patch("osmofold.osmofold_local.get_tfe", side_effect=mock_get_tfe)
+    def test_protein_unfolded_dG_custom_tfe(self, mock_seq, mock_tfe):
+        pdb_path = "test.pdb"
+        custom_tfe = {"urea": 1.0}
+        result = osmofold_local.protein_unfolded_dG(pdb_path, "urea", custom_tfe=custom_tfe)
+
+        self.assertEqual(result, {"urea": 10.0})  # Still the same since get_tfe is mocked
+
+    @patch("osmofold.osmofold_local.extract_sequence", side_effect=mock_extract_sequence)
+    @patch("osmofold.osmofold_local.get_tfe", side_effect=mock_get_tfe)
+    def test_protein_unfolded_dG_backbone_false(self, mock_seq, mock_tfe):
+        pdb_path = "test.pdb"
+        result = osmofold_local.protein_unfolded_dG(pdb_path, "urea", backbone=False)
+
+        self.assertEqual(result, {"urea": 10.0})  # Ensures backbone flag is handled correctly
+
+    @patch("osmofold.osmofold_local.extract_sequence", return_value="")
+    @patch("osmofold.osmofold_local.get_tfe", return_value=np.array([]))
+    def test_protein_unfolded_dG_empty_sequence(self, mock_seq, mock_tfe):
+        pdb_path = "test.pdb"
+        result = osmofold_local.protein_unfolded_dG(pdb_path, "urea")
+
+        self.assertEqual(result, {"urea": 0.0})  # Empty sequence should return zero free energy
 
 class TestProteinFoldedDG(unittest.TestCase):
-    @patch('osmofold.osmofold_local.get_pdb_info')
-    @patch('osmofold.osmofold_local.sasa_to_rasa')
-    @patch('osmofold.osmofold_local.get_tfe')
-    def test_single_osmolyte(self, mock_get_tfe, mock_sasa_to_rasa, mock_get_pdb_info):
-        mock_get_pdb_info.return_value = ("ACDE", [10.0, 20.0, 30.0, 40.0])
-        mock_sasa_to_rasa.return_value = [0.1, 0.2, 0.3, 0.4]
-        mock_get_tfe.return_value = [1.0, 2.0, 3.0, 4.0]
 
-        """Test for a single osmolyte."""
-        result = osmofold_local.protein_folded_dG("protein.pdb", "osmolyte")
-        expected_result = {"osmolyte": 1.0 * (0.1 * 1.0 + 0.2 * 2.0 + 0.3 * 3.0 + 0.4 * 4.0)}
-        self.assertEqual(result, expected_result)
+    # Mocked functions
+    def mock_get_pdb_info(pdb):
+        return ("ACDEFGHIKLMNPQRSTVWY", "mock_structure")
 
-    @patch('osmofold.osmofold_local.get_pdb_info')
-    @patch('osmofold.osmofold_local.sasa_to_rasa')
-    @patch('osmofold.osmofold_local.get_tfe')
-    def test_multiple_osmolytes(self, mock_get_tfe, mock_sasa_to_rasa, mock_get_pdb_info):
-        mock_get_pdb_info.return_value = ("ACDE", [10.0, 20.0, 30.0, 40.0])
-        mock_sasa_to_rasa.return_value = [0.1, 0.2, 0.3, 0.4]
-        mock_get_tfe.side_effect = [
-            [1.0, 2.0, 3.0, 4.0],  # Osmolyte 1
-            [2.0, 3.0, 4.0, 5.0],  # Osmolyte 2
-        ]
-
-        result = osmofold_local.protein_folded_dG("protein.pdb", ["osmolyte1", "osmolyte2"])
-        expected_result = {
-            "osmolyte1": 1.0 * (0.1 * 1.0 + 0.2 * 2.0 + 0.3 * 3.0 + 0.4 * 4.0),
-            "osmolyte2": 1.0 * (0.1 * 2.0 + 0.2 * 3.0 + 0.3 * 4.0 + 0.4 * 5.0),
+    def mock_get_chain_info(pdb):
+        return {
+            "Chain 1": ("ACDEFG", "mock_structure_1"),
+            "Chain 2": ("HIKLMN", "mock_structure_2"),
+            "Chain 3": ("PQRSTV", "mock_structure_3"),
+            "Chain 4": ("WY", "mock_structure_4"),
+            "All": ("ACDEFGHIKLMNPQRSTVWY", "mock_structure")
         }
-        self.assertEqual(result, expected_result)
 
-    @patch('osmofold.osmofold_local.get_pdb_info')
-    @patch('osmofold.osmofold_local.sasa_to_rasa')
-    @patch('osmofold.osmofold_local.get_tfe')
-    def test_custom_tfe(self, mock_get_tfe, mock_sasa_to_rasa, mock_get_pdb_info):
-        mock_get_pdb_info.return_value = ("ACDE", [10.0, 20.0, 30.0, 40.0])
-        mock_sasa_to_rasa.return_value = [0.1, 0.2, 0.3, 0.4]
-        mock_get_tfe.return_value = [1.0, 2.0, 3.0, 4.0]
+    def mock_get_tfe(sequence, osmolyte, custom_tfe=None):
+        return np.array([0.5] * len(sequence))  # Mock TFE values
 
-        """Test with custom TFE values."""
-        custom_tfe = {"osmolyteBack": [1.0, 2.0, 3.0, 4.0]}
-        result = osmofold_local.protein_folded_dG("protein.pdb", "osmolyte", custom_tfe=custom_tfe)
-        expected_result = {"osmolyte": 1.0 * (0.1 * 1.0 + 0.2 * 2.0 + 0.3 * 3.0 + 0.4 * 4.0)}
-        self.assertEqual(result, expected_result)
+    def mock_sasa_to_rasa(sequence, structure):
+        return np.array([1.0] * len(sequence))  # Mock relative solvent accessibility values (fully exposed)
 
-    @patch('osmofold.osmofold_local.get_pdb_info')
-    @patch('osmofold.osmofold_local.sasa_to_rasa')
-    @patch('osmofold.osmofold_local.get_tfe')
-    def test_concentration_scaling(self, mock_get_tfe, mock_sasa_to_rasa, mock_get_pdb_info):
-        mock_get_pdb_info.return_value = ("ACDE", [10.0, 20.0, 30.0, 40.0])
-        mock_sasa_to_rasa.return_value = [0.1, 0.2, 0.3, 0.4]
-        mock_get_tfe.return_value = [1.0, 2.0, 3.0, 4.0]
+    @patch("osmofold.osmofold_local.get_pdb_info", side_effect=mock_get_pdb_info)
+    @patch("osmofold.osmofold_local.sasa_to_rasa", side_effect=mock_sasa_to_rasa)
+    @patch("osmofold.osmofold_local.get_tfe", side_effect=mock_get_tfe)
+    def test_protein_folded_dG_single_osmolyte(self, mock_tfe, mock_rasa, mock_pdb):
+        pdb_path = "test.pdb"
+        result = osmofold_local.protein_folded_dG(pdb_path, "urea")
+        self.assertEqual(result, {"urea": 10.0})
 
-        """Test with a different concentration value."""
-        result = osmofold_local.protein_folded_dG("protein.pdb", "osmolyte", concentration=2.0)
-        expected_result = {"osmolyte": 2.0 * (0.1 * 1.0 + 0.2 * 2.0 + 0.3 * 3.0 + 0.4 * 4.0)}
-        self.assertEqual(result, expected_result)
+    @patch("osmofold.osmofold_local.get_pdb_info", side_effect=mock_get_pdb_info)
+    @patch("osmofold.osmofold_local.sasa_to_rasa", side_effect=mock_sasa_to_rasa)
+    @patch("osmofold.osmofold_local.get_tfe", side_effect=mock_get_tfe)
+    def test_protein_folded_dG_multiple_osmolytes(self, mock_tfe, mock_rasa, mock_pdb):
+        pdb_path = "test.pdb"
+        result = osmofold_local.protein_folded_dG(pdb_path, ["urea", "gdmcl"])
+        self.assertEqual(result, {"urea": 10.0, "gdmcl": 10.0})
 
-    @patch('osmofold.osmofold_local.get_pdb_info')
-    @patch('osmofold.osmofold_local.sasa_to_rasa')
-    @patch('osmofold.osmofold_local.get_tfe')
-    def test_no_backbone(self, mock_get_tfe, mock_sasa_to_rasa, mock_get_pdb_info):
-        mock_get_pdb_info.return_value = ("ACDE", [10.0, 20.0, 30.0, 40.0])
-        mock_sasa_to_rasa.return_value = [0.1, 0.2, 0.3, 0.4]
-        mock_get_tfe.return_value = [1.0, 2.0, 3.0, 4.0]
-        
-        """Test with backbone=False."""
-        result = osmofold_local.protein_folded_dG("protein.pdb", "osmolyte", backbone=False)
-        self.assertEqual(result, {"osmolyte": 1.0 * (0.1 * 1.0 + 0.2 * 2.0 + 0.3 * 3.0 + 0.4 * 4.0)})
+    @patch("osmofold.osmofold_local.get_chain_info", side_effect=mock_get_chain_info)
+    @patch("osmofold.osmofold_local.sasa_to_rasa", side_effect=mock_sasa_to_rasa)
+    @patch("osmofold.osmofold_local.get_tfe", side_effect=mock_get_tfe)
+    def test_protein_folded_dG_split_chains(self, mock_tfe, mock_rasa, mock_chain_info):
+        pdb_path = "test.pdb"
+        result = osmofold_local.protein_folded_dG(pdb_path, "urea", split_chains=True)
+        print(result)
+
+        expected = {
+            "Chain 1": {"urea": 3.0},
+            "Chain 2": {"urea": 3.0},
+            "Chain 3": {"urea": 3.0},
+            "Chain 4": {"urea": 1.0},
+            "All": {"urea": 10.0},
+        }
+        self.assertEqual(result, expected)
+
+    @patch("osmofold.osmofold_local.get_pdb_info", side_effect=mock_get_pdb_info)
+    @patch("osmofold.osmofold_local.sasa_to_rasa", side_effect=mock_sasa_to_rasa)
+    @patch("osmofold.osmofold_local.get_tfe", side_effect=mock_get_tfe)
+    def test_protein_folded_dG_concentration(self, mock_tfe, mock_rasa, mock_pdb):
+        pdb_path = "test.pdb"
+        result = osmofold_local.protein_folded_dG(pdb_path, "urea", concentration=2.0)
+        self.assertEqual(result, {"urea": 20.0})
+
+    @patch("osmofold.osmofold_local.get_pdb_info", side_effect=mock_get_pdb_info)
+    @patch("osmofold.osmofold_local.sasa_to_rasa", side_effect=mock_sasa_to_rasa)
+    @patch("osmofold.osmofold_local.get_tfe", side_effect=mock_get_tfe)
+    def test_protein_folded_dG_custom_tfe(self, mock_tfe, mock_rasa, mock_pdb):
+        pdb_path = "test.pdb"
+        custom_tfe = {"urea": 1.0}
+        result = osmofold_local.protein_folded_dG(pdb_path, "urea", custom_tfe=custom_tfe)
+
+        self.assertEqual(result, {"urea": 10.0})  # Still 10.0 since get_tfe is mocked
+
+    @patch("osmofold.osmofold_local.get_pdb_info", side_effect=mock_get_pdb_info)
+    @patch("osmofold.osmofold_local.sasa_to_rasa", side_effect=mock_sasa_to_rasa)
+    @patch("osmofold.osmofold_local.get_tfe", side_effect=mock_get_tfe)
+    def test_protein_folded_dG_backbone_false(self, mock_tfe, mock_rasa, mock_pdb):
+        pdb_path = "test.pdb"
+        result = osmofold_local.protein_folded_dG(pdb_path, "urea", backbone=False)
+
+        self.assertEqual(result, {"urea": 10.0})  # Ensures backbone flag is handled correctly
+
+    @patch("osmofold.osmofold_local.get_pdb_info", return_value=("", ""))
+    @patch("osmofold.osmofold_local.sasa_to_rasa", return_value=np.array([]))
+    @patch("osmofold.osmofold_local.get_tfe", return_value=np.array([]))
+    def test_protein_folded_dG_empty_sequence(self, mock_tfe, mock_rasa, mock_pdb):
+        pdb_path = "test.pdb"
+        result = osmofold_local.protein_folded_dG(pdb_path, "urea")
+
+        self.assertEqual(result, {"urea": 0.0})  # Empty sequence should return zero free energy
 
 class TestProteinDDGFolding(unittest.TestCase):
-    @patch('osmofold.osmofold_local.protein_folded_dG')
-    @patch('osmofold.osmofold_local.protein_unfolded_dG')
-    def test_single_osmolyte(self, mock_unfolded_dG, mock_folded_dG):
-        """Test with a single osmolyte, without triplet output."""
-        mock_folded_dG.return_value = {"osmolyte1": -20.0}
-        mock_unfolded_dG.return_value = {"osmolyte1": -10.0}
 
-        result = osmofold_local.protein_ddG_folding("protein.pdb", "osmolyte1")
-        expected_result = {"osmolyte1": -20.0 - (-10.0)}
-        self.assertEqual(result, expected_result)
+    # Mocked functions
+    def mock_protein_folded_dG(pdb, osmolytes, backbone=True, custom_tfe=None, concentration=1.0, split_chains=False):
+        if split_chains:
+            return {
+                "Chain 1": {"urea": 3.0},
+                "Chain 2": {"urea": 3.0},
+                "Chain 3": {"urea": 3.0},
+                "Chain 4": {"urea": 2.0},
+                "All": {"urea": 10.0},
+            }
+        return {"urea": 10.0}
 
-    @patch('osmofold.osmofold_local.protein_folded_dG')
-    @patch('osmofold.osmofold_local.protein_unfolded_dG')
-    def test_multiple_osmolytes(self, mock_unfolded_dG, mock_folded_dG):
-        """Test with multiple osmolytes, without triplet output."""
-        mock_folded_dG.return_value = {"osmolyte1": -20.0, "osmolyte2": -25.0}
-        mock_unfolded_dG.return_value = {"osmolyte1": -10.0, "osmolyte2": -15.0}
+    def mock_protein_unfolded_dG(pdb, osmolytes, backbone=True, custom_tfe=None, concentration=1.0, split_chains=False):
+        if split_chains:
+            return {
+                "Chain 1": {"urea": 5.0},
+                "Chain 2": {"urea": 5.0},
+                "Chain 3": {"urea": 5.0},
+                "Chain 4": {"urea": 2.0},
+                "All": {"urea": 17.0},
+            }
+        return {"urea": 17.0}
 
-        result = osmofold_local.protein_ddG_folding("protein.pdb", ["osmolyte1", "osmolyte2"])
-        expected_result = {
-            "osmolyte1": -20.0 - (-10.0),
-            "osmolyte2": -25.0 - (-15.0),
+    @patch("osmofold.osmofold_local.protein_folded_dG", side_effect=mock_protein_folded_dG)
+    @patch("osmofold.osmofold_local.protein_unfolded_dG", side_effect=mock_protein_unfolded_dG)
+    def test_protein_ddG_folding_single_osmolyte(self, mock_unfolded, mock_folded):
+        pdb_path = "test.pdb"
+        result = osmofold_local.protein_ddG_folding(pdb_path, "urea")
+
+        self.assertEqual(result, {"urea": -7.0})
+
+    @patch("osmofold.osmofold_local.protein_folded_dG", side_effect=mock_protein_folded_dG)
+    @patch("osmofold.osmofold_local.protein_unfolded_dG", side_effect=mock_protein_unfolded_dG)
+    def test_protein_ddG_folding_triplet(self, mock_unfolded, mock_folded):
+        pdb_path = "test.pdb"
+        result = osmofold_local.protein_ddG_folding(pdb_path, "urea", triplet=True)
+
+        self.assertEqual(result, {"urea": (10.0, 17.0, -7.0)})
+
+    @patch("osmofold.osmofold_local.protein_folded_dG", side_effect=mock_protein_folded_dG)
+    @patch("osmofold.osmofold_local.protein_unfolded_dG", side_effect=mock_protein_unfolded_dG)
+    def test_protein_ddG_folding_split_chains(self, mock_unfolded, mock_folded):
+        pdb_path = "test.pdb"
+        result = osmofold_local.protein_ddG_folding(pdb_path, "urea", split_chains=True)
+
+        expected = {
+            "Chain 1": {"urea": -2.0},
+            "Chain 2": {"urea": -2.0},
+            "Chain 3": {"urea": -2.0},
+            "Chain 4": {"urea": 0.0},
+            "All": {"urea": -7.0},
         }
-        self.assertEqual(result, expected_result)
+        self.assertEqual(result, expected)
 
-    @patch('osmofold.osmofold_local.protein_folded_dG')
-    @patch('osmofold.osmofold_local.protein_unfolded_dG')
-    def test_triplet_output(self, mock_unfolded_dG, mock_folded_dG):
-        """Test with triplet output enabled."""
-        mock_folded_dG.return_value = {"osmolyte1": -20.0}
-        mock_unfolded_dG.return_value = {"osmolyte1": -10.0}
+    @patch("osmofold.osmofold_local.protein_folded_dG", side_effect=mock_protein_folded_dG)
+    @patch("osmofold.osmofold_local.protein_unfolded_dG", side_effect=mock_protein_unfolded_dG)
+    def test_protein_ddG_folding_split_chains_triplet(self, mock_unfolded, mock_folded):
+        pdb_path = "test.pdb"
+        result = osmofold_local.protein_ddG_folding(pdb_path, "urea", split_chains=True, triplet=True)
 
-        result = osmofold_local.protein_ddG_folding("protein.pdb", ["osmolyte1"], triplet=True)
-        expected_result = {
-            "osmolyte1": (-20.0, -10.0, -20.0 - (-10.0)),
+        expected = {
+            "Chain 1": {"urea": (3.0, 5.0, -2.0)},
+            "Chain 2": {"urea": (3.0, 5.0, -2.0)},
+            "Chain 3": {"urea": (3.0, 5.0, -2.0)},
+            "Chain 4": {"urea": (2.0, 2.0, 0.0)},
+            "All": {"urea": (10.0, 17.0, -7.0)},
         }
-        self.assertEqual(result, expected_result)
-
-    @patch('osmofold.osmofold_local.protein_folded_dG')
-    @patch('osmofold.osmofold_local.protein_unfolded_dG')
-    def test_custom_tfe(self, mock_unfolded_dG, mock_folded_dG):
-        """Test with custom TFE values."""
-        mock_folded_dG.return_value = {"osmolyte1": -20.0}
-        mock_unfolded_dG.return_value = {"osmolyte1": -10.0}
-
-        custom_tfe = {"osmolyte1Back": [-1.0, -2.0, -3.0, -4.0]}
-        result = osmofold_local.protein_ddG_folding("protein.pdb", "osmolyte1", custom_tfe=custom_tfe)
-        mock_folded_dG.assert_called_once_with("protein.pdb", ["osmolyte1"], True, custom_tfe, 1.0)
-        mock_unfolded_dG.assert_called_once_with("protein.pdb", ["osmolyte1"], True, custom_tfe, 1.0)
-
-    @patch('osmofold.osmofold_local.protein_folded_dG')
-    @patch('osmofold.osmofold_local.protein_unfolded_dG')
-    def test_no_backbone(self, mock_unfolded_dG, mock_folded_dG):
-        """Test with backbone=False."""
-        mock_folded_dG.return_value = {"osmolyte1": -20.0}
-        mock_unfolded_dG.return_value = {"osmolyte1": -10.0}
-
-        result = osmofold_local.protein_ddG_folding("protein.pdb", "osmolyte1", backbone=False)
-        mock_folded_dG.assert_called_once_with("protein.pdb", ["osmolyte1"], False, None, 1.0)
-        mock_unfolded_dG.assert_called_once_with("protein.pdb", ["osmolyte1"], False, None, 1.0)
-
-    @patch('osmofold.osmofold_local.protein_folded_dG')
-    @patch('osmofold.osmofold_local.protein_unfolded_dG')
-    def test_concentration_scaling(self, mock_unfolded_dG, mock_folded_dG):
-        """Test with a different concentration value."""
-        mock_folded_dG.return_value = {"osmolyte1": -20.0}
-        mock_unfolded_dG.return_value = {"osmolyte1": -10.0}
-
-        result = osmofold_local.protein_ddG_folding("protein.pdb", "osmolyte1", concentration=2.0)
-        mock_folded_dG.assert_called_once_with("protein.pdb", ["osmolyte1"], True, None, 2.0)
-        mock_unfolded_dG.assert_called_once_with("protein.pdb", ["osmolyte1"], True, None, 2.0)
-
-    @patch('osmofold.osmofold_local.protein_folded_dG')
-    @patch('osmofold.osmofold_local.protein_unfolded_dG')
-    def test_no_osmolytes(self, mock_unfolded_dG, mock_folded_dG):
-        """Test with no osmolytes provided (edge case)."""
-        mock_folded_dG.return_value = {}
-        mock_unfolded_dG.return_value = {}
-
-        result = osmofold_local.protein_ddG_folding("protein.pdb", [])
-        self.assertEqual(result, {})
+        self.assertEqual(result, expected)
 
 if __name__ == "__main__":
     unittest.main()

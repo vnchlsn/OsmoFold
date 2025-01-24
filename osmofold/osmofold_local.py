@@ -161,6 +161,36 @@ def extract_sequence(pdb_file):
                     
     return ''.join(sequence)
 
+def extract_sequences_by_chains(pdb_file):
+    """
+    Extracts the amino acid sequences by chains from a PDB file.
+
+    Parameters:
+        pdb_file (str): Path to the PDB file.
+
+    Returns:
+        list: A list of amino acid sequences, one for each chain.
+    """
+    sequences = {}
+    seen_residues = set()  # To track and avoid duplicates within each chain
+
+    with open(pdb_file, 'r') as pdb:
+        for line in pdb:
+            if line.startswith('ATOM') or line.startswith('HETATM'):
+                chain_id = line[21]  # Chain ID
+                res_id = (chain_id, line[22:26].strip())  # Chain ID and residue number
+                if res_id not in seen_residues:
+                    seen_residues.add(res_id)
+                    residue_name = line[17:20].strip()
+                    aa = three_to_one(residue_name)
+
+                    if chain_id not in sequences:
+                        sequences[chain_id] = []  # Initialize the sequence list for this chain
+                    sequences[chain_id].append(aa)
+
+    # Combine the sequences for each chain into strings
+    return [''.join(seq) for seq in sequences.values()]
+
 def three_to_one(residue):
     conversion_dict = {
         'ALA': 'A', 'ARG': 'R', 'ASN': 'N', 'ASP': 'D', 'CYS': 'C', 'GLU': 'E', 
@@ -211,6 +241,38 @@ def get_pdb_info(pdb):
     sasa = PDB._SSTrajectory__get_all_proteins(PDB.traj, PDB._SSTrajectory__explicit_residue_checking).get_all_SASA(mode='residue', stride=1)[0]
     return [seq, sasa]
 
+def get_chain_info(pdb):
+    """
+    Retrieves the amino acid sequence and SASA values from a PDB file, seperated by chain.
+
+    Parameters:
+        pdb (str): Path to the PDB file.
+
+    Returns:
+        dictionary: A dictionary containing each chain, where each value is a list containing the sequence at position 0 and the sasa values at position 1.
+        {"Chain 1": [seq, sasa],
+        "Chain 2": [seq, sasa],
+        ...}
+    """
+        
+    PDB = SSTrajectory(pdb, pdb)
+
+    seq = PDB._SSTrajectory__get_all_proteins(PDB.traj, PDB._SSTrajectory__explicit_residue_checking).get_amino_acid_sequence(oneletter=True)
+    sasa = PDB._SSTrajectory__get_all_proteins(PDB.traj, PDB._SSTrajectory__explicit_residue_checking).get_all_SASA(mode='residue', stride=1)[0]
+
+    result = {}
+    global_index = 0
+
+    for chain_num, protein in enumerate(PDB.proteinTrajectoryList, start=1):
+        chain_seq = protein.get_amino_acid_sequence(oneletter=True)
+        chain_sasa = sasa[global_index:global_index + len(chain_seq)]
+        result[f"Chain {chain_num}"] = [chain_seq, chain_sasa]
+        global_index += len(chain_seq)
+
+    result["All"] = [seq, sasa]
+
+    return result
+
 def sasa_to_rasa(seq, sasa_list):
     """
     Converts SASA values to RASA (Relative Accessible Surface Area) values.
@@ -226,7 +288,7 @@ def sasa_to_rasa(seq, sasa_list):
     amino_acids = 'AFLIVPMGSTQNDEHKRCWY'
     return [sasa_list[i] / max_sasa_list[amino_acids.index(seq[i])] for i in range(len(seq))]
 
-def protein_unfolded_dG(pdb, osmolytes, backbone=True, custom_tfe=None, concentration=1.0):
+def protein_unfolded_dG(pdb, osmolytes, backbone=True, custom_tfe=None, concentration=1.0, split_chains=False):
     """
     Computes the total free energy (dG) for the unfolded protein for one or multiple osmolytes.
 
@@ -236,27 +298,40 @@ def protein_unfolded_dG(pdb, osmolytes, backbone=True, custom_tfe=None, concentr
         backbone (bool): Whether to account for the protein backbone. Default = True.
         custom_tfe (dict, optional): A dictionary with custom TFE values for osmolytes.
         concentration (float): The concentration in molar to scale the result. Default = 1.0.
+        split_chains (bool): Whether or not the output should give a separate TFE value for each chain.
 
     Returns:
-        dict: A dictionary where each key is an osmolyte, and the value is the total free energy.
+        dict: A dictionary where each key is an osmolyte (or chain, if split_chains = True) and the value is the total free energy.
     """
-    if isinstance(osmolytes, str):
-        osmolytes = [osmolytes]
+    # Ensure osmolytes is a list
+    osmolytes = [osmolytes] if isinstance(osmolytes, str) else osmolytes
 
-    seq = extract_sequence(pdb)
+    # Choose sequence extraction method
+    sequences = extract_sequences_by_chains(pdb) if split_chains else [extract_sequence(pdb)]
+    full_sequence = extract_sequence(pdb) if split_chains else None
+
     results = {}
+    for i, seq in enumerate(sequences, start=1):
+        chain_results = {}
+        for osmo in osmolytes:
+            osmo_key = osmo.lower() + ("Back" if backbone else "")
+            chain_results[osmo.lower()] = concentration * np.sum(get_tfe(seq, osmo_key, custom_tfe))
 
-    for osmo in osmolytes:
-        osmo = osmo.lower()
-        if backbone:
-            osmoBack = osmo + "Back"
+        if split_chains:
+            results[f"Chain {i}"] = chain_results
         else:
-            osmoBack = osmo
-        results[osmo] = concentration * np.sum(get_tfe(seq, osmoBack, custom_tfe))
+            results.update(chain_results)
+
+    if split_chains:
+        chain_results = {}
+        for osmo in osmolytes:
+            osmo_key = osmo.lower() + ("Back" if backbone else "")
+            chain_results[osmo.lower()] = concentration * np.sum(get_tfe(full_sequence, osmo_key, custom_tfe))
+        results["All"] = chain_results
 
     return results
 
-def protein_folded_dG(pdb, osmolytes, backbone=True, custom_tfe=None, concentration=1.0):
+def protein_folded_dG(pdb, osmolytes, backbone=True, custom_tfe=None, concentration=1.0, split_chains=False):
     """
     Computes the total free energy (dG) for the folded protein for one or multiple osmolytes.
 
@@ -266,32 +341,39 @@ def protein_folded_dG(pdb, osmolytes, backbone=True, custom_tfe=None, concentrat
         backbone (bool): Whether to account for the protein backbone. Default = True.
         custom_tfe (dict, optional): A dictionary with custom TFE values for osmolytes.
         concentration (float): The concentration in molar to scale the result. Default = 1.0.
+        split_chains (bool): Whether or not the output should give a separate TFE value for each chain.
 
     Returns:
-        dict: A dictionary where each key is an osmolyte, and the value is the total free energy.
+        dict: A dictionary where each key is an osmolyte (or chain, if split_chains = True), and the value is the total free energy.
     """
-    if isinstance(osmolytes, str):
-        osmolytes = [osmolytes]
+    # Ensure osmolytes is a list
+    osmolytes = [osmolytes] if isinstance(osmolytes, str) else osmolytes
 
-    sstraj = get_pdb_info(pdb)
-    seq = sstraj[0]
-    sasa = sstraj[1]
-    rasa = sasa_to_rasa(seq, sasa)
+    # Choose sequence extraction method
+    chains = get_chain_info(pdb) if split_chains else [get_pdb_info(pdb)]
 
     results = {}
-    for osmo in osmolytes:
-        osmo = osmo.lower()
-        if backbone:
-            osmoBack = osmo + "Back"
+    for i, chain in enumerate(chains, start=1):
+        chain_results = {}
+        protein = chains[chain] if split_chains else chain
+        for osmo in osmolytes:
+            tfe = []
+            rasa = []
+            osmo_key = osmo.lower() + ("Back" if backbone else "")
+            rasa = sasa_to_rasa(protein[0], protein[1])
+            tfe = get_tfe(protein[0], osmo_key, custom_tfe)
+            chain_results[osmo.lower()] = concentration * np.sum([rasa[j] * tfe[j] for j in range(len(tfe))])
+
+        if split_chains and i != len(chains):
+            results[f"Chain {i}"] = chain_results
+        elif split_chains and i == len(chains):
+            results["All"] = chain_results
         else:
-            osmoBack = osmo
-        tfe = get_tfe(seq, osmoBack, custom_tfe)
-        folded_tfe = np.sum([rasa[i] * tfe[i] for i in range(len(seq))])
-        results[osmo] = concentration * folded_tfe
+            results.update(chain_results)
 
     return results
 
-def protein_ddG_folding(pdb, osmolytes, backbone=True, triplet=False, custom_tfe=None, concentration=1.0):
+def protein_ddG_folding(pdb, osmolytes, backbone=True, triplet=False, custom_tfe=None, concentration=1.0, split_chains = False):
     """
     Computes the change in free energy (dG) upon protein folding for one or multiple osmolytes.
 
@@ -302,21 +384,35 @@ def protein_ddG_folding(pdb, osmolytes, backbone=True, triplet=False, custom_tfe
         triplet (bool): Whether to return the triplet (folded, unfolded, and their difference). Default = False.
         custom_tfe (dict, optional): A dictionary with custom TFE values for osmolytes.
         concentration (float): The concentration in molar to scale the result. Default = 1.0.
+        split_chains (bool): Whether or not the output should give a separate TFE value for each chain.
 
     Returns:
         dict: A dictionary where each key is an osmolyte, and the value is either a tuple (folded_dG, unfolded_dG, dG_change) or the free energy difference.
     """
-    if isinstance(osmolytes, str):
-        osmolytes = [osmolytes]
+    # Ensure osmolytes is a list
+    osmolytes = [osmolytes] if isinstance(osmolytes, str) else osmolytes
 
-    folded_dG = protein_folded_dG(pdb, osmolytes, backbone, custom_tfe, concentration)
-    unfolded_dG = protein_unfolded_dG(pdb, osmolytes, backbone, custom_tfe, concentration)
+    # Compute folded and unfolded dG
+    folded_dG = protein_folded_dG(pdb, osmolytes, backbone, custom_tfe, concentration, split_chains)
+    unfolded_dG = protein_unfolded_dG(pdb, osmolytes, backbone, custom_tfe, concentration, split_chains)
 
     results = {}
-    for osmo in osmolytes:
-        if triplet:
-            results[osmo] = (folded_dG[osmo], unfolded_dG[osmo], folded_dG[osmo] - unfolded_dG[osmo])
-        else:
-            results[osmo] = folded_dG[osmo] - unfolded_dG[osmo]
-
+    
+    if split_chains:
+        # Handle case where data is split by chains
+        for chain in folded_dG.keys():  # Includes "All" as well
+            results[chain] = {}
+            for osmolyte in osmolytes:
+                f_dG = folded_dG[chain].get(osmolyte, 0)  # Default to 0 if missing
+                u_dG = unfolded_dG[chain].get(osmolyte, 0)
+                ddG = f_dG - u_dG
+                results[chain][osmolyte] = (f_dG, u_dG, ddG) if triplet else ddG
+    else:
+        # Handle case where data is not split by chains (just "All")
+        for osmolyte in osmolytes:
+            f_dG = folded_dG.get(osmolyte, 0)
+            u_dG = unfolded_dG.get(osmolyte, 0)
+            ddG = f_dG - u_dG
+            results[osmolyte] = (f_dG, u_dG, ddG) if triplet else ddG
+    
     return results

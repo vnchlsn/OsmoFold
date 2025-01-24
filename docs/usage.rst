@@ -47,6 +47,50 @@ Example Output:
 
 In this example, `trehalose` and `tmao` stabilize the folded state (with trehalose doing so more robustly), while `betaine` stabilizes the unfolded state.
 
+Individual TFEs by Chain
+------------------------
+
+The following approach applies for pdbs which contain multiple protein chains, if you want an individual TFE for each chains
+
+.. code-block:: python
+
+   from osmofold.osmofold_local import protein_ddG_folding
+
+   output = protein_ddG_folding(
+       pdb="path/to/pdb.pdb", 
+       osmolytes=["trehalose", "tmao", "betaine"], 
+       concentration=1.0,
+       triplet = False,
+       split_chains = True
+   )
+
+   print(output)
+
+Explanation of Parameters
+
+- **`pdb`**: Path to the input PDB file of the protein. This should be in the .pdb format (not .cif) and contain monomeric proteins with no non-protein atoms.
+- **`osmolytes`**: List of osmolytes (e.g., "trehalose", "tmao", "betaine") to simulate their effects on protein folding.
+- **`concentration`**: Concentration of the osmolyte(s) in molar (M). Default is `1.0` M.
+- **`triplet`**: If `True`, the output for each osmolyte will be a tuple containing the folded ΔG, unfolded ΔG, and ΔΔG. If `False`, only the ΔΔG (a float) will be returned. Default is `True`.
+- **`split_chains`**: Determined whether results should be given for each peptide chain individually, just a sum for all chains. Default is `False`.
+
+Output
+
+The results from `protein_ddG_folding` are reported in units of **calories per mole of protein (cal/mol)**:
+
+- **Negative values**: Indicate stabilization of the **folded state**.
+- **Positive values**: Indicate stabilization of the **unfolded state**.
+
+Example Output:
+
+.. code-block:: text
+
+   {'Chain 1': {'trehalose': -20.0, 'tmao': 10, 'betaine': 2.5},
+   'Chain 2': {'trehalose': -30.0, 'tmao': -45.2, 'betaine': 10},
+   'All': {'trehalose': -50.0, 'tmao': -35.2, 'betaine': 12.5}}
+
+In this example, `trehalose` stabilizes the folded state of both chains. `tmao` stabilize the folded state of chain 2 but not chain 1, and `betaine` stabilizes the unfolded state of both chains.
+
 Using Custom Solvent Accessible Surface Area (SASA) Values
 ------------------------
 
