@@ -38,7 +38,7 @@ Version History
 
 * 1/23/25 - OsmoFold v0.3.0
 
-Added the ability to give individual results for multiple interacting chains within the same pdb (see `usage <https://osmofold.readthedocs.io/en/latest/usage.html>`_.)
+Added the ability to give individual results for multiple interacting chains within the same pdb (see `usage <https://osmofold.readthedocs.io/en/latest/usage.html>`_).
 
 * 1/16/25 - OsmoFold v0.2.2
 
