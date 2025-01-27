@@ -27,11 +27,11 @@ For a given osmolyte and a given amino acid, this function returns the experimen
 
 - **`amino`**: The one-letter code for the amino acid you wish to get a gTFE for.
 
-   Example: `'A'`
+      Example: `'A'`
 
 - **`cosolute`**: The osmolyte of interest.
    
-   Example: `'trehalose'`
+      Example: `'trehalose'`
 
 **Returns:**  
 An integer representing the gTFE for the provided amino acid-osmolyte combination.
@@ -66,7 +66,7 @@ Extracts the amino acid sequence from a given PDB file as one-letter codes.
 
 - **`pdb_file`**: A path to the PDB file of interest (relative to the working directory).  
 
-   Example: `"your/path/here.pdb"`
+      Example: `"your/path/here.pdb"`
 
 **Returns:**  
 A string containing the one-letter code for the protein in the specified PDB file.  
@@ -87,7 +87,7 @@ Extracts the amino acid sequence from a given PDB file as one-letter codes, divi
 
 - **`pdb_file`**: A path to the PDB file of interest (relative to the working directory).  
 
-   Example: `"your/path/here.pdb"`
+      Example: `"your/path/here.pdb"`
 
 **Returns:**  
 A string containing the one-letter code for the individual protein chains in the specified PDB file. 
@@ -108,7 +108,7 @@ A simple function for converting three-letter amino acid code to one-letter.
 
 - **`residue`**: A string containing the three-letter amino acid code you wish to convert.  
 
-   Example: `"ALA"`
+      Example: `"ALA"`
 
 **Returns:**  
 A character containing the corresponding one-letter amino acid code.
@@ -126,15 +126,15 @@ Returns gTFEs for an entire protein sequence and a given osmolyte.
 
 - **`seq`**: The amino acid sequence you wish to run.  
 
-   Example: `"ACD"`
+      Example: `"ACD"`
 
 - **`osmo`**: The osmolyte you wish to compute with the given sequence.  
 
-   Example: `"trehalose"`
+      Example: `"trehalose"`
 
 - **`custom_tfe`**: OPTIONAL. A dictionary of custom gTFE values, one for each of the 20 amino acid. Useful for testing osmolyte that OsmoFold doesn't currently support.
 
-   Example: `{'A': 52.1, 'C': -31.2, 'D': 79.9, ...}`
+      Example: `{'A': 52.1, 'C': -31.2, 'D': 79.9, ...}`
 
 **Returns:**  
 A list containing the gTFEs for a given sequence, with indicies matching the amino acid sequence.
