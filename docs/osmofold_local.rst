@@ -66,7 +66,7 @@ Extracts the amino acid sequence from a given PDB file as one-letter codes.
 
 - **`pdb_file`**: A path to the PDB file of interest (relative to the working directory).  
 
-  Example: `"your/path/here.pdb"`
+   Example: `"your/path/here.pdb"`
 
 **Returns:**  
 A string containing the one-letter code for the protein in the specified PDB file.  
@@ -87,7 +87,7 @@ Extracts the amino acid sequence from a given PDB file as one-letter codes, divi
 
 - **`pdb_file`**: A path to the PDB file of interest (relative to the working directory).  
 
-  Example: `"your/path/here.pdb"`
+   Example: `"your/path/here.pdb"`
 
 **Returns:**  
 A string containing the one-letter code for the individual protein chains in the specified PDB file. 
@@ -126,15 +126,15 @@ Returns gTFEs for an entire protein sequence and a given osmolyte.
 
 - **`seq`**: The amino acid sequence you wish to run.  
 
-  Example: `"ACD"`
+   Example: `"ACD"`
 
 - **`osmo`**: The osmolyte you wish to compute with the given sequence.  
 
-  Example: `"trehalose"`
+   Example: `"trehalose"`
 
 - **`custom_tfe`**: OPTIONAL. A dictionary of custom gTFE values, one for each of the 20 amino acid. Useful for testing osmolyte that OsmoFold doesn't currently support.
 
-  Example: `{'A': 52.1, 'C': -31.2, 'D': 79.9, ...}`
+   Example: `{'A': 52.1, 'C': -31.2, 'D': 79.9, ...}`
 
 **Returns:**  
 A list containing the gTFEs for a given sequence, with indicies matching the amino acid sequence.
