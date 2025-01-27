@@ -5,7 +5,9 @@
 
 A summary of the functions in `osmofold_local.py` (the core script of OsmoFold) and how they work.
 
-### get_max_sasa_list()
+get_max_sasa_list()
+------------------
+
 A function that returns a list of maximum SASA (Solvent Accessible Surface Area) values for each amino acid.
 
 **Arguments:**  
@@ -16,7 +18,9 @@ A list of maximum SASA values for each amino acid in the following order: `AFLIV
 
 ---
 
-### amino_to_energy()
+amino_to_energy()
+--------------------
+
 For a given osmolyte and a given amino acid, this function returns the experimentally derived gTFEs (Gibbs Transfer Free Energies) determined by Auton and Bolen.
 
 **Arguments:**
@@ -53,7 +57,9 @@ Each osmolyte has both R-group and backbone values:
 
 ---
 
-### extract_sequences()
+extract_sequences()
+------------------
+
 Extracts the amino acid sequence from a given PDB file as one-letter codes.
 
 **Arguments:**
@@ -65,14 +71,16 @@ Extracts the amino acid sequence from a given PDB file as one-letter codes.
 **Returns:**  
 A string containing the one-letter code for the protein in the specified PDB file.  
 
-   Example:  `"MALWMRLLPLLALLALWGPDPAAAFVNQHLCGSHLVEALYLVCGERGFFYTPKTRREAEDLQVGQVELGGGPGAGSLQPLALEGSLQKRGIVEQCCTSICSLYQLENYCN"`
+   Example:  `"SEQWENCE"`
 
 **Notes:**  
 This function is only compatible with PDB files containing protein chains. All other atoms must be removed.
 
 ---
 
-### extract_sequence_by_chains()
+extract_sequence_by_chains()
+---------------------------
+
 Extracts the amino acid sequence from a given PDB file as one-letter codes, divided by protein chain.
 
 **Arguments:**
@@ -91,7 +99,9 @@ This function is only compatible with PDB files containing protein chains. All o
 
 ---
 
-### three_to_one()
+three_to_one()
+-------------
+
 A simple function for converting three-letter amino acid code to one-letter.
 
 **Arguments:**
@@ -107,7 +117,9 @@ A character containing the corresponding one-letter amino acid code.
 
 ---
 
-### get_tfe()
+get_tfe()
+--------
+
 Returns gTFEs for an entire protein sequence and a given osmolyte.
 
 **Arguments:**
