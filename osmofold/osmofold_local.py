@@ -252,7 +252,8 @@ def get_chain_info(pdb):
         dictionary: A dictionary containing each chain, where each value is a list containing the sequence at position 0 and the sasa values at position 1.
         {"Chain 1": [seq, sasa],
         "Chain 2": [seq, sasa],
-        ...}
+        ...
+        "All": [seq. sasa]}
     """
         
     PDB = SSTrajectory(pdb, pdb)
