@@ -177,9 +177,13 @@ A dictionary containing a key for each chain in the input PDB. Each correspondin
 [0] is the sequence of the input protein(s) as a string, and [1] is their corresponding SASA values stored as floats. Also 
 contains an "All" key whose corresponding value will be the same as the output of get_pdb_info().
 
-   Example: `{"Chain 1": ["ACD", [52.1, -31.2, 79.9]],
-            "Chain 2": ["FPW", [-111.2, 90.4, 51.7]],
-            "All": ["ACDFPW, [52.1, -31.2, 79.9, -111.2, 90.4, 51.7]]}`
+   Example: 
+   
+   .. code-block:: python
+
+            {"Chain 1": ["ACD", [52.1, -31.2, 79.9]], 
+            "Chain 2": ["FPW", [-111.2, 90.4, 51.7]], 
+            "All": ["ACDFPW", [52.1, -31.2, 79.9, -111.2, 90.4, 51.7]]}
 
 ---
 
@@ -241,10 +245,120 @@ A dictionary where each key is an osmolyte (or a chain identifier if `split_chai
 
    Example (multi-chain output with split_chains=True):
 
-      `{
-      "Chain 1": {"trehalose": -32.5, "sucrose": -18.4},
-      "Chain 2": {"trehalose": -42.8, "sucrose": -23.7},
-      "All": {"trehalose": -75.3, "sucrose": -42.1}
-      }`
+     .. code-block:: python
+
+            {
+            "Chain 1": {"trehalose": -32.5, "sucrose": -18.4},
+            "Chain 2": {"trehalose": -42.8, "sucrose": -23.7},
+            "All": {"trehalose": -75.3, "sucrose": -42.1}
+            }
+
+---
+
+protein_folded_dG()
+----------------------
+
+Computes the total free energy (ΔG) for the folded protein in the presence of one or multiple osmolytes.
+
+**Arguments:**
+
+- **`pdb`**: A string containing the filepath to the input PDB file.  
+
+      Example: `"/path/to/pdb.pdb"`
+
+- **`osmolytes`**: A string containing a single osmolyte or a list of strings of osmolytes to compute ΔG values for.  
+
+      Example: `"trehalose"`  
+      Example: `["trehalose", "sucrose"]`
+
+- **`backbone`**: OPTIONAL. A boolean that indicates whether to include contributions from the protein backbone. Default is `True`.
+
+- **`custom_tfe`**: OPTIONAL. A dictionary of custom transfer free energy (TFE) values for specific osmolytes.  
+
+      Example: `{'A': 52.1, 'C': -31.2, 'D': 79.9, ...}`
+
+- **`concentration`**: OPTIONAL. A floating-point value denoting the osmolyte concentration in molar (M) to scale the computed free energy. Default is `1.0`.
+
+- **`split_chains`**: OPTIONAL. A boolean that indicates whether to compute ΔG separately for each protein chain. If `True`, the output will contain separate values for each chain. Default is `False`.
+
+**Returns:**  
+A dictionary where each key is an osmolyte (or a chain identifier if `split_chains=True`), and the corresponding value is the computed total free energy.
+
+   Example (single-chain output):  
+
+      `{"trehalose": -53.7, "sucrose": -28.4}`
+
+   Example (multi-chain output with split_chains=True):
+
+      .. code-block:: python
+
+            {
+            "Chain 1": {"trehalose": -21.4, "sucrose": -10.9},
+            "Chain 2": {"trehalose": -32.3, "sucrose": -17.5},
+            "All": {"trehalose": -53.7, "sucrose": -28.4}
+            }
+
+---
+
+protein_ddG_folding()
+----------------------
+
+Computes the change in free energy (ΔG) upon protein folding for one or multiple osmolytes.
+
+**Arguments:**
+
+- **`pdb`**: A string containing the filepath to the input PDB file.  
+
+      Example: `"/path/to/pdb.pdb"`
+
+- **`osmolytes`**: A string containing a single osmolyte or a list of strings of osmolytes to compute ΔG values for.  
+
+      Example: `"trehalose"`  
+      Example: `["trehalose", "sucrose"]`
+
+- **`backbone`**: OPTIONAL. A boolean that indicates whether to include contributions from the protein backbone. Default is `True`.
+
+- **`triplet`**: OPTIONAL. A boolean that determines whether the function returns a triplet containing the folded ΔG, unfolded ΔG, and their difference (ΔΔG). If `False`, only the free energy difference (ΔΔG) is returned. Default is `False`.
+
+- **`custom_tfe`**: OPTIONAL. A dictionary of custom transfer free energy (TFE) values for specific osmolytes.  
+
+      Example: `{'A': 52.1, 'C': -31.2, 'D': 79.9, ...}`
+
+- **`concentration`**: OPTIONAL. A floating-point value denoting the osmolyte concentration in molar (M) to scale the computed free energy. Default is `1.0`.
+
+- **`split_chains`**: OPTIONAL. A boolean that indicates whether to compute ΔG separately for each protein chain. If `True`, the output will contain separate values for each chain. Default is `False`.
+
+**Returns:**  
+A dictionary where each key is an osmolyte (or a chain identifier if `split_chains=True`), and the corresponding value is either:  
+- A floating-point value representing the free energy difference (ΔΔG).  
+- A tuple `(folded_dG, unfolded_dG, ΔΔG)` if `triplet=True`.  
+
+   Example (single-chain output with `triplet=False`):  
+
+      `{"trehalose": -22.5, "sucrose": -13.7}`
+
+   Example (single-chain output with `triplet=True`):  
+
+      `{"trehalose": (-53.7, -31.2, -22.5), "sucrose": (-28.4, -14.7, -13.7)}`
+
+   Example (multi-chain output with `split_chains=True` and `triplet=False`):
+
+      .. code-block:: python
+            
+            {
+            "Chain 1": {"trehalose": -10.1, "sucrose": -5.8},
+            "Chain 2": {"trehalose": -12.4, "sucrose": -7.9},
+            "All": {"trehalose": -22.5, "sucrose": -13.7}
+            }
+
+   Example (multi-chain output with `split_chains=True` and `triplet=True`):
+
+      .. code-block:: python
+
+            {
+            "Chain 1": {"trehalose": (-21.4, -11.3, -10.1), "sucrose": (-10.9, -5.1, -5.8)},
+            "Chain 2": {"trehalose": (-32.3, -19.9, -12.4), "sucrose": (-17.5, -9.6, -7.9)},
+            "All": {"trehalose": (-53.7, -31.2, -22.5), "sucrose": (-28.4, -14.7, -13.7)}
+            }
 
 *If any of the functions fail to work as described, please submit a GitHub issue or contact Vincent (`vnichol2@uwyo.edu`).*
