@@ -297,7 +297,7 @@ def protein_unfolded_dG(pdb, osmolytes, backbone=True, custom_tfe=None, concentr
         pdb (str): Path to the PDB file.
         osmolytes (str or list): A single osmolyte or a list of osmolytes.
         backbone (bool): Whether to account for the protein backbone. Default = True.
-        custom_tfe (dict, optional): A dictionary with custom TFE values for osmolytes.
+        custom_tfe (dict): A dictionary with custom TFE values for osmolytes.
         concentration (float): The concentration in molar to scale the result. Default = 1.0.
         split_chains (bool): Whether or not the output should give a separate TFE value for each chain.
 

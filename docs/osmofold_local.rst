@@ -124,7 +124,7 @@ Returns gTFEs for an entire protein sequence and a given osmolyte.
 
 **Arguments:**
 
-- **`seq`**: The amino acid sequence you wish to run.  
+- **`seq`**: The amino acid sequence for which you want to compute TFE values.  
 
       Example: `"ACD"`
 
@@ -132,13 +132,110 @@ Returns gTFEs for an entire protein sequence and a given osmolyte.
 
       Example: `"trehalose"`
 
-- **`custom_tfe`**: OPTIONAL. A dictionary of custom gTFE values, one for each of the 20 amino acid. Useful for testing osmolyte that OsmoFold doesn't currently support.
+- **`custom_tfe`**: OPTIONAL. A dictionary of custom gTFE values, one for each of the 20 amino acids. Useful for testing osmolytes that OsmoFold doesn't currently support.
 
       Example: `{'A': 52.1, 'C': -31.2, 'D': 79.9, ...}`
 
 **Returns:**  
-A list containing the gTFEs for a given sequence, with indicies matching the amino acid sequence.
+A list containing the gTFEs for a given sequence, with indices matching the amino acid sequence.
 
-   Example: `[52.1, -31.2, 79.9, ...]`
+   Example: `[52.1, -31.2, 79.9]`
+
+get_pdb_info()
+--------
+
+Returns the sequence and SASA for a given input PDB.
+
+**Arguments:**
+
+- **`pdb`**: A string containing the filepath of the input PDB.
+      Example: `"/path/to/pdb.pdb"`
+
+**Returns:**  
+A list with two elements. [0] is the sequence of the input protein(s) as a string, and [1] is their corresponding SASA values.
+
+   Example: `["ACD", [52.1, -31.2, 79.9]]`
+
+get_chain_info()
+--------
+
+Returns the sequence and SASA for a given input PDB, split into individual chains.
+
+**Arguments:**
+
+- **`pdb`**: A string containing the filepath of the input PDB.
+
+      Example: `"/path/to/pdb.pdb"`
+
+**Returns:**  
+A dictionary containing a key for each chain in the input PDB. Each corresponding value is a list with two elements, where 
+[0] is the sequence of the input protein(s) as a string, and [1] is their corresponding SASA values. Also contains an "All"
+key whose corresponding value will be the same as the output of get_pdb_info().
+
+   Example: `{"Chain 1": ["ACD", [52.1, -31.2, 79.9]],
+            "Chain 2": ["FPW", [-111.2, 90.4, 51.7]],
+            "All": ["ACDFPW, [52.1, -31.2, 79.9, -111.2, 90.4, 51.7]]}`
+
+sasa_to_rasa()
+--------
+
+Converts Solvent Accessible Surface Area (SASA) values into Relative Accessible Surface Area (RASA) values, where 1 
+represents a fully exposed residue and 0 represents a fully buried residue.
+
+**Arguments:**
+
+- **`seq`**: The amino acid sequence for which you want to compute RASA values.  
+
+      Example: `"ACD"`
+
+- **`sasa_list`**: A list of SASA values with indices corresponding to the input sequence.
+
+      Example: `[87.0, 135.2, 99.1]`
+
+**Returns:**  
+A list of RASA values with indices corresponding to the input sequence.
+
+   Example: `[0.75, 0.89, 0.81]`
+
+protein_unfolded_dG()
+----------------------
+
+Computes the total free energy (ΔG) for the unfolded protein in the presence of one or multiple osmolytes.
+
+**Arguments:**
+
+- **`pdb`**: The filepath to the input PDB file.  
+
+      Example: `"/path/to/pdb.pdb"`
+
+- **`osmolytes`**: A single osmolyte or a list of osmolytes to compute ΔG values for.  
+
+      Example: `"trehalose"`  
+      Example: `["trehalose", "sucrose"]`
+
+- **`backbone`**: OPTIONAL. Whether to include contributions from the protein backbone. Default is `True`.
+
+- **`custom_tfe`**: OPTIONAL. A dictionary of custom transfer free energy (TFE) values for specific osmolytes.  
+
+      Example: `{'A': 52.1, 'C': -31.2, 'D': 79.9, ...}`
+
+- **`concentration`**: OPTIONAL. The osmolyte concentration in molar (M) to scale the computed free energy. Default is `1.0`.
+
+- **`split_chains`**: OPTIONAL. Whether to compute ΔG separately for each protein chain. If `True`, the output will contain separate values for each chain. Default is `False`.
+
+**Returns:**  
+A dictionary where each key is an osmolyte (or a chain identifier if `split_chains=True`), and the corresponding value is the computed total free energy.
+
+   Example (single-chain output):  
+
+   `{"trehalose": -75.3, "sucrose": -42.1}`
+
+   Example (multi-chain output with split_chains=True):
+
+      `{
+    "Chain 1": {"trehalose": -32.5, "sucrose": -18.4},
+    "Chain 2": {"trehalose": -42.8, "sucrose": -23.7},
+    "All": {"trehalose": -75.3, "sucrose": -42.1}
+      }`
 
 *If any of the functions fail to work as described, please submit a GitHub issue or contact Vincent (`vnichol2@uwyo.edu`).*
