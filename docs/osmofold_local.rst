@@ -223,7 +223,8 @@ Computes the total free energy (ΔG) for the unfolded protein in the presence of
 
 - **`osmolytes`**: A string containing a single osmolyte or a list of strings of osmolytes to compute ΔG values for.  
 
-      Example: `"trehalose"`  
+      Example: `"trehalose"`
+
       Example: `["trehalose", "sucrose"]`
 
 - **`backbone`**: OPTIONAL. A boolean that indicates whether to include contributions from the protein backbone. Default is `True`.
@@ -241,7 +242,9 @@ A dictionary where each key is an osmolyte (or a chain identifier if `split_chai
 
    Example (single-chain output):  
 
-      `{"trehalose": -75.3, "sucrose": -42.1}`
+      .. code-block:: python
+
+            {"trehalose": -75.3, "sucrose": -42.1}
 
    Example (multi-chain output with split_chains=True):
 
@@ -268,7 +271,8 @@ Computes the total free energy (ΔG) for the folded protein in the presence of o
 
 - **`osmolytes`**: A string containing a single osmolyte or a list of strings of osmolytes to compute ΔG values for.  
 
-      Example: `"trehalose"`  
+      Example: `"trehalose"`
+
       Example: `["trehalose", "sucrose"]`
 
 - **`backbone`**: OPTIONAL. A boolean that indicates whether to include contributions from the protein backbone. Default is `True`.
@@ -286,7 +290,9 @@ A dictionary where each key is an osmolyte (or a chain identifier if `split_chai
 
    Example (single-chain output):  
 
-      `{"trehalose": -53.7, "sucrose": -28.4}`
+      .. code-block:: python
+      
+            {"trehalose": -53.7, "sucrose": -28.4}
 
    Example (multi-chain output with split_chains=True):
 
@@ -314,6 +320,7 @@ Computes the change in free energy (ΔG) upon protein folding for one or multipl
 - **`osmolytes`**: A string containing a single osmolyte or a list of strings of osmolytes to compute ΔG values for.  
 
       Example: `"trehalose"`  
+
       Example: `["trehalose", "sucrose"]`
 
 - **`backbone`**: OPTIONAL. A boolean that indicates whether to include contributions from the protein backbone. Default is `True`.
@@ -335,11 +342,15 @@ A dictionary where each key is an osmolyte (or a chain identifier if `split_chai
 
    Example (single-chain output with `triplet=False`):  
 
-      `{"trehalose": -22.5, "sucrose": -13.7}`
+      .. code-block:: python
+      
+            {"trehalose": -22.5, "sucrose": -13.7}
 
    Example (single-chain output with `triplet=True`):  
 
-      `{"trehalose": (-53.7, -31.2, -22.5), "sucrose": (-28.4, -14.7, -13.7)}`
+      .. code-block:: python
+
+            {"trehalose": (-53.7, -31.2, -22.5), "sucrose": (-28.4, -14.7, -13.7)}
 
    Example (multi-chain output with `split_chains=True` and `triplet=False`):
 
