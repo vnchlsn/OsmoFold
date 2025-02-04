@@ -63,3 +63,4 @@ First public release. Support for basic ΔG calculations of monomeric proteins (
    installation
    usage
    osmofold_local
+   osmofold_lite

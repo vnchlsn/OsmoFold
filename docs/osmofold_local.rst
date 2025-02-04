@@ -309,7 +309,7 @@ A dictionary where each key is an osmolyte (or a chain identifier if `split_chai
 protein_ddG_folding()
 ----------------------
 
-Computes the change in free energy (ΔG) upon protein folding for one or multiple osmolytes.
+Computes the change in free energy (ΔΔG) of a protein conformational change for one or multiple osmolytes.
 
 **Arguments:**
 
