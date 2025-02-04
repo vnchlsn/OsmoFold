@@ -3,7 +3,7 @@
 **osmofold_lite.py**
 =====================
 
-A summary of the functions in `osmofold_lite.py` (designed to perform TFE calculations without SourSop) and how they work.
+A summary of the functions in `osmofold_lite.py` (designed to perform TFE calculations without SOURSOP) and how they work.
 
 read_fasta()
 --------------------
