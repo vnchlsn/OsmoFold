@@ -22,8 +22,6 @@ Processes a PDB file to extract sequence data and compute the change in free ene
 
       Example: `["trehalose", "sucrose"]`
 
-- **`backbone`**: A boolean that indicates whether to include contributions from the protein backbone.
-
 - **`custom_tfe`**: OPTIONAL. A dictionary of custom transfer free energy (TFE) values for specific osmolytes.  
 
       Example: `{'A': 52.1, 'C': -31.2, 'D': 79.9, ...}`  
@@ -150,8 +148,6 @@ Batch processes PDB files in a directory to compute folding free energy changes 
       Example: `"trehalose"`  
 
       Example: `["trehalose", "sucrose"]`
-
-- **`backbone`**: OPTIONAL. A boolean indicating whether to include contributions from the protein backbone. Default is `True`.  
 
 - **`custom_tfe`**: OPTIONAL. A dictionary of custom transfer free energy (TFE) values for specific osmolytes.  
 

@@ -36,8 +36,6 @@ Computes the total free energy (ΔG) for the unfolded protein in the presence of
 
       Example: `["trehalose", "sucrose"]`
 
-- **`backbone`**: OPTIONAL. A boolean that indicates whether to include contributions from the protein backbone. Default is `True`.
-
 - **`custom_tfe`**: OPTIONAL. A dictionary of custom transfer free energy (TFE) values for specific osmolytes.  
 
       Example: `{'A': 52.1, 'C': -31.2, 'D': 79.9, ...}`
@@ -75,8 +73,6 @@ Computes the total free energy (ΔG) for the folded protein in the presence of o
       Example: `"trehalose"`
 
       Example: `["trehalose", "sucrose"]`
-
-- **`backbone`**: OPTIONAL. A boolean that indicates whether to include contributions from the protein backbone. Default is `True`.
 
 - **`custom_tfe`**: OPTIONAL. A dictionary of custom transfer free energy (TFE) values for specific osmolytes.  
 
@@ -116,9 +112,8 @@ Computes the change in free energy (ΔΔG) of a protein conformational change fo
 
       Example: `["trehalose", "sucrose"]`
 
-- **`backbone`**: OPTIONAL. A boolean that indicates whether to include contributions from the protein backbone. Default is `True`.
-
-- **`triplet`**: OPTIONAL. A boolean that determines whether the function returns a triplet containing the folded ΔG, unfolded ΔG, and their difference (ΔΔG). If `False`, only the free energy difference (ΔΔG) is returned. Default is `False`.
+- **`triplet`**: OPTIONAL. A boolean that determines whether the function returns a triplet containing the folded ΔG, unfolded ΔG, and their difference (ΔΔG). 
+If `False`, only the free energy difference (ΔΔG) is returned. Default is `False`.
 
 - **`custom_tfe`**: OPTIONAL. A dictionary of custom transfer free energy (TFE) values for specific osmolytes.  
 

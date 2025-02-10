@@ -5,7 +5,7 @@ from concurrent.futures import ProcessPoolExecutor, as_completed
 import datetime
 import csv
 
-def process_pdb(directory, osmolytes, backbone, custom_tfe, pdb_file, concentration=1.0, split_chains=False):
+def process_pdb(directory, osmolytes, custom_tfe, pdb_file, concentration=1.0, split_chains=False):
     """
     Processes a PDB file to extract sequence data and compute the change in free energy (dG) upon folding
     in the presence of osmolytes.
@@ -13,7 +13,6 @@ def process_pdb(directory, osmolytes, backbone, custom_tfe, pdb_file, concentrat
     Parameters:
         directory (str): Path to the directory containing the PDB file.
         osmolytes (str or list): A single osmolyte or a list of osmolytes to evaluate.
-        backbone (bool): Whether to account for the protein backbone in energy calculations.
         custom_tfe (dict, optional): A dictionary with custom transfer free energy (TFE) values for osmolytes.
         pdb_file (str): The name of the PDB file to process.
         concentration (float, optional): Osmolyte concentration in molar. Default = 1.0.
@@ -59,7 +58,6 @@ def process_pdb(directory, osmolytes, backbone, custom_tfe, pdb_file, concentrat
         osmolyte_results = protein_ddG_folding(
             pdb_path,
             osmolytes=osmolytes,
-            backbone=backbone,
             custom_tfe=custom_tfe,
             triplet=True,
             concentration=concentration,
@@ -173,7 +171,7 @@ def save_results_to_csv(results):
 
     print(f"Results saved to {output_file}")
 
-def batch_process_pdbs(directory, osmolytes, backbone=True, custom_tfe=None, concentration=1.0, save_csv=True, num_workers=1, split_chains=False):
+def batch_process_pdbs(directory, osmolytes, custom_tfe=None, concentration=1.0, save_csv=True, num_workers=1, split_chains=False):
     """
     Batch processes PDB files in a directory to compute folding free energy changes (dG) 
     for specified osmolytes using parallel processing.
@@ -181,7 +179,6 @@ def batch_process_pdbs(directory, osmolytes, backbone=True, custom_tfe=None, con
     Parameters:
         directory (str): Path to the directory containing PDB files.
         osmolytes (str or list): A single osmolyte or a list of osmolytes to analyze.
-        backbone (bool, optional): Whether to consider the protein backbone in calculations. Default = True.
         custom_tfe (dict, optional): A dictionary containing custom transfer free energy (TFE) values for osmolytes.
         concentration (float, optional): Osmolyte concentration in molar. Default = 1.0.
         save_csv (bool, optional): Whether to save results to a CSV file. Default = True.
@@ -224,7 +221,7 @@ def batch_process_pdbs(directory, osmolytes, backbone=True, custom_tfe=None, con
     # Process PDB files in parallel using a process pool
     with ProcessPoolExecutor(max_workers=num_workers) as executor:
         # Submit processing tasks for each PDB file
-        futures = {executor.submit(process_pdb, directory, osmolytes, backbone, custom_tfe, pdb_file, concentration, split_chains): pdb_file for pdb_file in pdb_files}
+        futures = {executor.submit(process_pdb, directory, osmolytes, custom_tfe, pdb_file, concentration, split_chains): pdb_file for pdb_file in pdb_files}
 
         # Collect results as they complete
         for future in as_completed(futures):

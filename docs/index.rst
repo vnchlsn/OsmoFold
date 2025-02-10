@@ -36,6 +36,10 @@ In general, **OsmoFold should be used to support experimental data, not replace 
 Version History
 ---------------
 
+* 2/10/25 - OsmoFold v.0.4.0
+
+Overhauled the TFE caculation method to be consistent with `Auton and Bolen's literature <https://pubmed.ncbi.nlm.nih.gov/17875431/>`_.
+
 * 1/23/25 - OsmoFold v0.3.0
 
 Added the ability to give individual results for multiple interacting chains within the same pdb (see `usage <https://osmofold.readthedocs.io/en/latest/usage.html>`_).

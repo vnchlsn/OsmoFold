@@ -14,8 +14,23 @@ A function that returns a list of maximum SASA (Solvent Accessible Surface Area)
 None.
 
 **Returns:**  
-A list of maximum SASA values for each amino acid in the following order: `AFLIVPMGSTQNDEHKRCWY`.
+A dictionary containing the unfolded SASA of protein sidechains and backbones.
 
+.. code-block:: python
+
+    asa_means = {
+        "backbone": {
+            "A": 27.85, "R": 25.05, "N": 25.15, "D": 26.00, "C": 26.35,
+            "Q": 25.30, "E": 25.70, "G": 65.15, "H": 24.15, "I": 19.95,
+            "L": 22.70, "K": 26.05, "M": 25.25, "F": 24.30, "P": 22.50,
+            "S": 29.40, "T": 24.05, "W": 23.55, "Y": 25.60, "V": 20.40
+        },
+        "sidechain": {
+            "A": 55.10, "R": 171.10, "N": 90.05, "D": 87.00, "C": 72.95,
+            "Q": 116.85, "E": 113.35, "G": 1.00, "H": 111.50, "I": 117.10,
+            "L": 109.55, "K": 150.65, "M": 122.40, "F": 129.25, "P": 87.00,
+            "S": 66.50, "T": 84.25, "W": 156.55, "Y": 141.65, "V": 96.35
+        }}
 ---
 
 amino_to_energy()
@@ -37,7 +52,7 @@ For a given osmolyte and a given amino acid, this function returns the experimen
 An integer representing the gTFE for the provided amino acid-osmolyte combination.
 
 **Notes:**  
-The returned values represent the gTFE of the R-group ONLY. To get the combined gTFE of the R-group and backbone, append `"Back"` to the osmolyte name.  
+The returned values represent the gTFE of the R-group ONLY. To get the gTFE of the backbone only, append `"Back"` to the osmolyte name.
 
    Example: `"tmaoBack"`, `"trehaloseBack"`, `"ureaBack"`
 
@@ -53,7 +68,7 @@ Each osmolyte has both R-group and backbone values:
 - Proline (Auton and Bolen)
 - Glycerol (Auton and Bolen)
 - Trehalose (Auton and Bolen)
-- Trehalose (Hong *et al.*)
+- Trehalose (Hong *et al.* 2015)
 
 ---
 
@@ -132,15 +147,25 @@ Returns gTFEs for an entire protein sequence and a given osmolyte.
 
       Example: `"trehalose"`
 
-- **`custom_tfe`**: OPTIONAL. A dictionary of custom gTFE values, one for each of the 20 amino acids. Useful for testing osmolytes that OsmoFold doesn't currently support.
+- **`custom_tfe`**: OPTIONAL. A dictionary of custom gTFE values, one for each of the 20 amino acids. This should cover both the backbone AND side chain.
+Useful for testing osmolytes that OsmoFold doesn't currently support.
+
 Each value key pair should be made up of a character (amino acid) and a float (gTFE).
 
-      Example: `{'A': 52.1, 'C': -31.2, 'D': 79.9, ...}`
+      Example: 
+      
+      .. code-block:: python
+
+            {
+                "backbone": { 'A': X, 'F': Y, 'L': Z, ... },
+                "sidechain": { 'A': A, 'F': A, 'L': A, ... }
+            }
 
 **Returns:**  
-A list containing the gTFEs for a given sequence, with indices matching the amino acid sequence.
+ Tuple: Two lists of TFE values for each amino acid in the sequence (backbone, sidechain).
+ The indices correspond to the input sequence.
 
-   Example: `[52.1, -31.2, 79.9]`
+   Example: `([22, 22, 22], [52.1, -31.2, 79.9])`
 
 ---
 
@@ -155,9 +180,10 @@ Returns the sequence and SASA for a given input PDB.
       Example: `"/path/to/pdb.pdb"`
 
 **Returns:**  
-A list with two elements. [0] is the sequence of the input protein(s) as a string, and [1] is their corresponding SASA values.
+ Tuple: Contians the protein sequence, and lists of SASA values for each amino acid in the sequence (seq, backbone, sidechain).
+ The indices correspond to the input sequence.
 
-   Example: `["ACD", [52.1, -31.2, 79.9]]`
+   Example: `("ACD", [62.1, 55.2, 21.7], [33.1, 24.1, 19.7])`
 
 ---
 
@@ -173,17 +199,19 @@ Returns the sequence and SASA for a given input PDB, split into individual chain
       Example: `"/path/to/pdb.pdb"`
 
 **Returns:**  
-A dictionary containing a key for each chain in the input PDB. Each corresponding value is a list with two elements, where 
-[0] is the sequence of the input protein(s) as a string, and [1] is their corresponding SASA values stored as floats. Also 
-contains an "All" key whose corresponding value will be the same as the output of get_pdb_info().
+A dictionary containing a key for each chain in the input PDB. Each corresponding value is a tuple with three elements, where 
+the first is the sequence of the input protein(s) as a string, the second is their corresponding SASA values for the backbone 
+stored as floats, and the 3rd is the corresponding SASA values for each sidechain (also stored as floats).
+
+Also contains an "All" key whose corresponding value will be the same as the output of get_pdb_info().
 
    Example: 
    
    .. code-block:: python
 
-            {"Chain 1": ["ACD", [52.1, -31.2, 79.9]], 
-            "Chain 2": ["FPW", [-111.2, 90.4, 51.7]], 
-            "All": ["ACDFPW", [52.1, -31.2, 79.9, -111.2, 90.4, 51.7]]}
+            {"Chain 1": ("ACD", [62.1, 55.2, 21.7], [33.1, 24.1, 19.7]), 
+            "Chain 2": ("FPW", [15.7, 21.6, 33.3], [65.1, 54.1, 41.2]), 
+            "All": ("ACDFPW", [62.1, 55.2, 21.7, 15.7, 21.6, 33.3], [33.1, 24.1, 19.7, 65.1, 54.1, 41.2])}
 
 ---
 
@@ -199,14 +227,18 @@ represents a fully exposed residue and 0 represents a fully buried residue.
 
       Example: `"ACD"`
 
-- **`sasa_list`**: A list of SASA values with indices corresponding to the input sequence, stored as floats.
+- **`backbone_sasa`**: A list of SASA values for the backbone with indices corresponding to the input sequence, stored as floats.
+
+      Example: `[62.1, 55.2, 21.7]`
+
+- **`sidechain_sasa`**: A list of SASA values for the sidechains with indices corresponding to the input sequence, stored as floats.
 
       Example: `[87.0, 135.2, 99.1]`
 
 **Returns:**  
-A list of  floating-point RASA values with indices corresponding to the input sequence.
+A tuple containing two lists of RASA values for the backbone and sidechain.
 
-   Example: `[0.75, 0.89, 0.81]`
+   Example: `([0.8, 0.63, 0.21], [0.75, 0.43, 0.92])`
 
 ---
 
@@ -226,8 +258,6 @@ Computes the total free energy (ΔG) for the unfolded protein in the presence of
       Example: `"trehalose"`
 
       Example: `["trehalose", "sucrose"]`
-
-- **`backbone`**: OPTIONAL. A boolean that indicates whether to include contributions from the protein backbone. Default is `True`.
 
 - **`custom_tfe`**: OPTIONAL. A dictionary of custom transfer free energy (TFE) values for specific osmolytes.  
 
@@ -275,8 +305,6 @@ Computes the total free energy (ΔG) for the folded protein in the presence of o
 
       Example: `["trehalose", "sucrose"]`
 
-- **`backbone`**: OPTIONAL. A boolean that indicates whether to include contributions from the protein backbone. Default is `True`.
-
 - **`custom_tfe`**: OPTIONAL. A dictionary of custom transfer free energy (TFE) values for specific osmolytes.  
 
       Example: `{'A': 52.1, 'C': -31.2, 'D': 79.9, ...}`
@@ -322,8 +350,6 @@ Computes the change in free energy (ΔΔG) of a protein conformational change fo
       Example: `"trehalose"`  
 
       Example: `["trehalose", "sucrose"]`
-
-- **`backbone`**: OPTIONAL. A boolean that indicates whether to include contributions from the protein backbone. Default is `True`.
 
 - **`triplet`**: OPTIONAL. A boolean that determines whether the function returns a triplet containing the folded ΔG, unfolded ΔG, and their difference (ΔΔG). If `False`, only the free energy difference (ΔΔG) is returned. Default is `False`.
 

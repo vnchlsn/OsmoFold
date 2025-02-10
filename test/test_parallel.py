@@ -1,112 +1,71 @@
 from osmofold import parallel
 import unittest
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch, MagicMock, mock_open
 from concurrent.futures import ProcessPoolExecutor, as_completed
 import os
 import json
 
 class TestProcessPDB(unittest.TestCase):
-
-    @patch('osmofold.parallel.extract_sequences_by_chains')
-    @patch('osmofold.parallel.extract_sequence')
-    @patch('osmofold.parallel.protein_ddG_folding')
-    def test_process_pdb_split_chains(self, mock_ddg_folding, mock_extract_sequence, mock_extract_sequences_by_chains):
-        # Mocking the return values
-        mock_extract_sequences_by_chains.return_value = ['AAAA', 'BBBB']
-        mock_extract_sequence.return_value = 'ABABAB'
-        
-        mock_ddg_folding.return_value = {
-            'Chain 1': {'osmolyte1': (1.0, 2.0, 3.0), 'osmolyte2': (1.5, 2.5, 3.5)},
-            'Chain 2': {'osmolyte1': (1.1, 2.1, 3.1), 'osmolyte2': (1.6, 2.6, 3.6)}
+    
+    @patch("os.path.join", return_value="mocked_path.pdb")
+    @patch("osmofold.parallel.extract_sequences_by_chains", return_value=["SEQ1", "SEQ2"])
+    @patch("osmofold.parallel.extract_sequence", return_value="SEQ")
+    @patch("osmofold.parallel.protein_ddG_folding")
+    def test_process_pdb_split_chains(
+        self, mock_ddG_folding, mock_extract_seq, mock_extract_seq_chains, mock_path_join
+    ):
+        mock_ddG_folding.return_value = {
+            "Chain 1": {"Osm1": (1.0, 2.0, 3.0)},
+            "Chain 2": {"Osm1": (4.0, 5.0, 6.0)},
         }
-        
-        directory = '/mock/path'
-        osmolytes = ['osmolyte1', 'osmolyte2']
-        backbone = 'backbone_data'
-        custom_tfe = 'custom_tfe_data'
-        pdb_file = 'mock.pdb'
-        concentration = 1.0
-        split_chains = True
-        
-        # Call the function
-        pdb_file, results = parallel.process_pdb(directory, osmolytes, backbone, custom_tfe, pdb_file, concentration, split_chains)
-        
-        # Test the results
-        self.assertEqual(pdb_file, 'mock.pdb')
-        self.assertIn('Chain 1', results)
-        self.assertIn('Chain 2', results)
-        self.assertIn('All', results)
-        
-        # Check chain-specific results
-        self.assertEqual(results['Chain 1']['protein_length'], 4)
-        self.assertEqual(results['Chain 2']['protein_length'], 4)
-        
-        # Check osmolyte results for each chain
-        self.assertEqual(results['Chain 1']['osmolytes']['osmolyte1']['dG_Folded'], 1.0)
-        self.assertEqual(results['Chain 1']['osmolytes']['osmolyte2']['dG_Folded'], 1.5)
-        
-        self.assertEqual(results['Chain 2']['osmolytes']['osmolyte1']['dG_Folded'], 1.1)
-        self.assertEqual(results['Chain 2']['osmolytes']['osmolyte2']['dG_Folded'], 1.6)
+        directory = "mock_dir"
+        osmolytes = ["Osm1"]
+        custom_tfe = {}
+        pdb_file = "test.pdb"
 
-        # Check combined "All" results
-        self.assertEqual(results['All']['protein_length'], 8)  # 4 + 4 for two chains
-        self.assertEqual(results['All']['osmolytes']['osmolyte1']['dG_Folded'], 2.1)
-        self.assertEqual(results['All']['osmolytes']['osmolyte2']['dG_Folded'], 3.1)
+        filename, result = parallel.process_pdb(directory, osmolytes, custom_tfe, pdb_file, split_chains=True)
 
-    @patch('osmofold.parallel.extract_sequences_by_chains')
-    @patch('osmofold.parallel.extract_sequence')
-    @patch('osmofold.parallel.protein_ddG_folding')
-    def test_process_pdb_no_split_chains(self, mock_ddg_folding, mock_extract_sequence, mock_extract_sequences_by_chains):
-        # Mocking the return values
-        mock_extract_sequences_by_chains.return_value = ['AAAA']
-        mock_extract_sequence.return_value = 'ABABAB'
-        
-        mock_ddg_folding.return_value = {
-            'All': {'osmolyte1': (1.0, 2.0, 3.0), 'osmolyte2': (1.5, 2.5, 3.5)}
-        }
-        
-        directory = '/mock/path'
-        osmolytes = ['osmolyte1', 'osmolyte2']
-        backbone = 'backbone_data'
-        custom_tfe = 'custom_tfe_data'
-        pdb_file = 'mock.pdb'
-        concentration = 1.0
-        split_chains = False
-        
-        # Call the function
-        pdb_file, results = parallel.process_pdb(directory, osmolytes, backbone, custom_tfe, pdb_file, concentration, split_chains)
-        
-        # Test the results
-        self.assertEqual(pdb_file, 'mock.pdb')
-        self.assertIn('All', results)
-        
-        # Check the "All" results
-        self.assertEqual(results['All']['protein_length'], 6)  # Full sequence length (ABABAB)
-        
-        # Check osmolyte results for "All"
-        self.assertEqual(results['All']['osmolytes']['osmolyte1']['dG_Folded'], 1.0)
-        self.assertEqual(results['All']['osmolytes']['osmolyte2']['dG_Folded'], 1.5)
+        self.assertEqual(filename, pdb_file)
+        self.assertIn("All", result)
+        self.assertIn("Chain 1", result)
+        self.assertIn("Chain 2", result)
+        self.assertEqual(result["All"]["osmolytes"]["Osm1"], {"dG_Folded": 5.0, "dG_Unfolded": 7.0, "ddG_Folding": 9.0})
+    
+    @patch("os.path.join", return_value="mocked_path.pdb")
+    @patch("osmofold.parallel.extract_sequence", return_value="SEQ")
+    @patch("osmofold.parallel.protein_ddG_folding", return_value={"All": {"Osm1": (1.0, 2.0, 3.0)}})
+    def test_process_pdb_no_split_chains(
+        self, mock_ddG_folding, mock_extract_seq, mock_path_join
+    ):
+        directory = "mock_dir"
+        osmolytes = ["Osm1"]
+        custom_tfe = {}
+        pdb_file = "test.pdb"
 
-    @patch('osmofold.parallel.extract_sequences_by_chains')
-    @patch('osmofold.parallel.extract_sequence')
-    @patch('osmofold.parallel.protein_ddG_folding')
-    def test_process_pdb_error_handling(self, mock_ddg_folding, mock_extract_sequence, mock_extract_sequences_by_chains):
-        # Simulating an error in processing
-        mock_extract_sequences_by_chains.side_effect = Exception("Mock error during sequence extraction")
-        
-        directory = '/mock/path'
-        osmolytes = ['osmolyte1']
-        backbone = 'backbone_data'
-        custom_tfe = 'custom_tfe_data'
-        pdb_file = 'mock.pdb'
-        
-        # Call the function
-        pdb_file, results = parallel.process_pdb(directory, osmolytes, backbone, custom_tfe, pdb_file)
-        
-        # Test that error is captured
-        self.assertEqual(pdb_file, 'mock.pdb')
-        self.assertIn('error', results)
-        self.assertEqual(results['error'], 'not enough values to unpack (expected 3, got 0)')
+        filename, result = parallel.process_pdb(directory, osmolytes, custom_tfe, pdb_file, split_chains=False)
+
+        self.assertEqual(filename, pdb_file)
+        self.assertIn("All", result)
+        self.assertEqual(result["All"]["osmolytes"]["Osm1"], {"dG_Folded": 1.0, "dG_Unfolded": 2.0, "ddG_Folding": 3.0})
+    
+    @patch("os.path.join", return_value="mocked_path.pdb")
+    @patch("osmofold.parallel.extract_sequence", side_effect=Exception("Mocked error"))
+    def test_process_pdb_error_handling(self, mock_extract_seq, mock_path_join):
+        directory = "mock_dir"
+        osmolytes = ["Osm1"]
+        custom_tfe = {}
+        pdb_file = "test.pdb"
+
+        filename, result = parallel.process_pdb(directory, osmolytes, custom_tfe, pdb_file, split_chains=False)
+
+        self.assertEqual(filename, pdb_file)
+        self.assertIn("error", result)
+        self.assertEqual(result["error"], "Mocked error")
+
+def mock_process_pdb(directory, osmolytes, custom_tfe, pdb_file, concentration=1.0, split_chains=False):
+    if pdb_file == "file1.pdb":
+        return "file1.pdb", {"error": "Mocked error"}
+    return "file2.pdb", {"All": {"osmolytes": {"Osm1": {"dG_Folded": 2.0}}}}
 
 class TestBatchProcessPDBs(unittest.TestCase):
 
@@ -149,8 +108,8 @@ class TestBatchProcessPDBs(unittest.TestCase):
         self.assertEqual(results['file1.pdb'], {'All': {'osmolyte1': (1.0, 2.0, 3.0)}})
 
         # Check that `submit` was called for each pdb file
-        mock_executor.submit.assert_any_call(mock_process_pdb, directory, osmolytes, True, None, 'file1.pdb', 1.0, False)
-        mock_executor.submit.assert_any_call(mock_process_pdb, directory, osmolytes, True, None, 'file2.pdb', 1.0, False)
+        mock_executor.submit.assert_any_call(mock_process_pdb, directory, osmolytes, None, 'file1.pdb', 1.0, False)
+        mock_executor.submit.assert_any_call(mock_process_pdb, directory, osmolytes, None, 'file2.pdb', 1.0, False)
 
         # Ensure that the mock future's result method was called
         mock_future.result.assert_called_once()
@@ -233,8 +192,8 @@ class TestBatchProcessPDBs(unittest.TestCase):
         mock_save_csv.assert_called_once_with(results)
 
         # Check that `submit` was called for each pdb file
-        mock_executor.submit.assert_any_call(mock_process_pdb, directory, osmolytes, True, None, 'file1.pdb', 1.0, False)
-        mock_executor.submit.assert_any_call(mock_process_pdb, directory, osmolytes, True, None, 'file2.pdb', 1.0, False)
+        mock_executor.submit.assert_any_call(mock_process_pdb, directory, osmolytes, None, 'file1.pdb', 1.0, False)
+        mock_executor.submit.assert_any_call(mock_process_pdb, directory, osmolytes, None, 'file2.pdb', 1.0, False)
 
         # Ensure that the mock future's result method was called
         mock_future.result.assert_called_once()
@@ -278,14 +237,87 @@ class TestBatchProcessPDBs(unittest.TestCase):
         self.assertEqual(results['file1.pdb'], {'All': {'osmolyte1': (1.0, 2.0, 3.0)}})
 
         # Check that `submit` was called for each pdb file
-        mock_executor.submit.assert_any_call(mock_process_pdb, directory, osmolytes, True, None, 'file1.pdb', 1.0, False)
-        mock_executor.submit.assert_any_call(mock_process_pdb, directory, osmolytes, True, None, 'file2.pdb', 1.0, False)
+        mock_executor.submit.assert_any_call(mock_process_pdb, directory, osmolytes, None, 'file1.pdb', 1.0, False)
+        mock_executor.submit.assert_any_call(mock_process_pdb, directory, osmolytes, None, 'file2.pdb', 1.0, False)
 
         # Ensure that the mock future's result method was called
         mock_future.result.assert_called_once()
 
         # Ensure `save_results_to_csv` is not called (because save_csv=False)
         mock_save_csv.assert_not_called()
+
+class TestSaveResultsToCSV(unittest.TestCase):
+
+    @patch("builtins.open", new_callable=mock_open)
+    @patch("osmofold.parallel.csv.writer")
+    @patch("osmofold.parallel.datetime.datetime")
+    def test_save_results_success(self, mock_datetime, mock_csv_writer, mock_file):
+        # Mock datetime to ensure a predictable filename
+        mock_datetime.now.return_value.strftime.return_value = "20250207_123456"
+        
+        results = {
+            "protein1.pdb": {
+                "Chain 1": {
+                    "protein_length": 150,
+                    "osmolytes": {
+                        "Urea": {"dG_Folded": -5.0, "dG_Unfolded": -3.0, "ddG_Folding": -2.0}
+                    }
+                },
+                "All": {
+                    "protein_length": 150,
+                    "osmolytes": {
+                        "Urea": {"dG_Folded": -5.2, "dG_Unfolded": -3.1, "ddG_Folding": -2.1}
+                    }
+                }
+            }
+        }
+
+        parallel.save_results_to_csv(results)
+
+        # Check the correct filename was used
+        expected_filename = "batch_results_ddg_20250207_123456.csv"
+        mock_file.assert_called_once_with(expected_filename, mode="w", newline="")
+
+        # Check if the correct rows were written
+        mock_csv_writer.return_value.writerow.assert_any_call(["PDB name", "Chain", "Protein Length", "Osmolyte", "dG_Unfolded", "dG_Folded", "ddG_Folding", "Error"])
+        mock_csv_writer.return_value.writerow.assert_any_call(["protein1.pdb", "Chain 1", 150, "Urea", -3.0, -5.0, -2.0, "N/A"])
+        mock_csv_writer.return_value.writerow.assert_any_call(["protein1.pdb", "All", 150, "Urea", -3.1, -5.2, -2.1, "N/A"])
+
+    @patch("builtins.open", new_callable=mock_open)
+    @patch("osmofold.parallel.csv.writer")
+    @patch("osmofold.parallel.datetime.datetime")
+    def test_save_results_with_errors(self, mock_datetime, mock_csv_writer, mock_file):
+        mock_datetime.now.return_value.strftime.return_value = "20250207_123456"
+        
+        results = {
+            "protein2.pdb": {
+                "error": "Failed to process file"
+            },
+            "protein3.pdb": {
+                "Chain A": {
+                    "error": "Chain processing error"
+                }
+            }
+        }
+
+        parallel.save_results_to_csv(results)
+
+        # Verify error rows were written correctly
+        mock_csv_writer.return_value.writerow.assert_any_call(["protein2.pdb", "N/A", "N/A", "N/A", "N/A", "N/A", "N/A", "Failed to process file"])
+        mock_csv_writer.return_value.writerow.assert_any_call(["protein3.pdb", "Chain A", "N/A", "N/A", "N/A", "N/A", "N/A", "Chain processing error"])
+
+    @patch("builtins.open", new_callable=mock_open)
+    @patch("osmofold.parallel.csv.writer")
+    @patch("osmofold.parallel.datetime.datetime")
+    def test_save_results_empty(self, mock_datetime, mock_csv_writer, mock_file):
+        mock_datetime.now.return_value.strftime.return_value = "20250207_123456"
+        
+        results = {}
+
+        parallel.save_results_to_csv(results)
+
+        # Check that only the header is written
+        mock_csv_writer.return_value.writerow.assert_called_once_with(["PDB name", "Chain", "Protein Length", "Osmolyte", "dG_Unfolded", "dG_Folded", "ddG_Folding", "Error"])
 
 if __name__ == '__main__':
     unittest.main()

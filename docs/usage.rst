@@ -117,7 +117,8 @@ Below is an example of calculating the ΔΔG of a protein using custom SASA valu
 Explanation of Parameters
 
 - **`seq`**: The one letter amino acid sequence for the protein of interest.
-- **`sasa_list`**: A list contianing the SASA values for each residue in the protein sequence. These values should encompass both the protein backbone AND R-group, with units of square angstroms.
+- **`backbone_sasa`**: A list contianing the SASA values for each residue in the protein sequence. These values should encompass both the backbone ONLY, with units of square angstroms.
+- **`sidechain_sasa`**: A list contianing the SASA values for each residue in the protein sequence. These values should encompass both the sidechain ONLY, with units of square angstroms.
 - **`osmolytes`**: List of osmolytes (e.g., "trehalose", "tmao", "betaine") to simulate their effects on protein folding.
 - **`concentration`**: Concentration of the osmolyte(s) in molar (M). Default is `1.0` M.
 - **`triplet`**: If `True`, the output for each osmolyte will be a tuple containing the folded ΔG, unfolded ΔG, and ΔΔG. If `False`, only the ΔΔG (a float) will be returned. Default is `True`.

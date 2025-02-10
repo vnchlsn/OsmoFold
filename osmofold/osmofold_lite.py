@@ -29,19 +29,18 @@ def read_fasta(fasta_path):
             sequences.append(sequence)
     return sequences
     
-def protein_unfolded_dG_lite(seq, osmolytes, backbone=True, custom_tfe=None, concentration=1.0):
+def protein_unfolded_dG_lite(seq, osmolytes, custom_tfe=None, concentration=1.0):
     """
-    Computes the total free energy (dG) for the unfolded protein for one or multiple osmolytes.
+    Computes the total free energy (dG) for the unfolded state of a protein in the presence of one or multiple osmolytes.
 
     Parameters:
-        seq (str): The sequence of interest, as one-letter code.
+        seq (str): The amino acid sequence of the protein, using one-letter codes.
         osmolytes (str or list): A single osmolyte or a list of osmolytes.
-        backbone (bool): Whether to account for the protein backbone. Default = True.
-        custom_tfe (dict, optional): A dictionary with custom TFE values for osmolytes.
-        concentration (float): The concentration in molar to scale the result. Default = 1.0.
+        custom_tfe (dict, optional): A dictionary with custom transfer free energy (TFE) values for osmolytes.
+        concentration (float): The osmolyte concentration in molar units, used to scale the result. Default = 1.0.
 
     Returns:
-        dict: A dictionary where each key is an osmolyte, and the value is the total free energy.
+        dict: A dictionary where each key is an osmolyte, and the value is the total free energy of the unfolded protein.
     """
     if isinstance(osmolytes, str):
         osmolytes = [osmolytes]
@@ -50,66 +49,73 @@ def protein_unfolded_dG_lite(seq, osmolytes, backbone=True, custom_tfe=None, con
 
     for osmo in osmolytes:
         osmo = osmo.lower()
-        if backbone:
-            osmoBack = osmo + "Back"
-        else:
-            osmoBack = osmo
-        results[osmo] = concentration * np.sum(get_tfe(seq, osmoBack, custom_tfe))
+
+        backbone_tfe, sidechain_tfe = get_tfe(seq, osmo, custom_tfe)
+
+        tfe = concentration * np.sum(np.array([
+            backbone_tfe[i] + sidechain_tfe[i] for i in range(len(seq))]))
+
+        results[osmo] = tfe
 
     return results
 
-def protein_folded_dG_lite(seq, sasa_list, osmolytes, backbone=True, custom_tfe=None, concentration=1.0):
+def protein_folded_dG_lite(seq, backbone_sasa, sidechain_sasa, osmolytes, custom_tfe=None, concentration=1.0):
     """
-    Computes the total free energy (dG) for the unfolded protein for one or multiple osmolytes.
+    Computes the total free energy (dG) for the folded state of a protein in the presence of one or multiple osmolytes.
 
     Parameters:
-        seq (str): The sequence of interest, as one-letter code.
-        sasa_list (list): A list of the sasa values for each residue in the protein of interest.
+        seq (str): The amino acid sequence of the protein, using one-letter codes.
+        backbone_sasa (list): A list of solvent-accessible surface area (SASA) values for the backbone of each residue.
+        sidechain_sasa (list): A list of SASA values for the sidechain of each residue.
         osmolytes (str or list): A single osmolyte or a list of osmolytes.
-        backbone (bool): Whether to account for the protein backbone. Default = True.
-        custom_tfe (dict, optional): A dictionary with custom TFE values for osmolytes.
-        concentration (float): The concentration in molar to scale the result. Default = 1.0.
+        custom_tfe (dict, optional): A dictionary with custom transfer free energy (TFE) values for osmolytes.
+        concentration (float): The osmolyte concentration in molar units, used to scale the result. Default = 1.0.
 
     Returns:
-        dict: A dictionary where each key is an osmolyte, and the value is the total free energy.
+        dict: A dictionary where each key is an osmolyte, and the value is the total free energy of the folded protein.
     """
     if isinstance(osmolytes, str):
         osmolytes = [osmolytes]
 
     results = {}
-    rasa = sasa_to_rasa(seq, sasa_list)
+    backbone_rasa, sidechain_rasa = sasa_to_rasa(seq, backbone_sasa, sidechain_sasa)
 
     for osmo in osmolytes:
         osmo = osmo.lower()
-        if backbone:
-            osmoBack = osmo + "Back"
-        else:
-            osmoBack = osmo
-        results[osmo] = concentration * np.sum(np.fromiter((tfe * rsa for tfe, rsa in zip(get_tfe(seq, osmoBack, custom_tfe), rasa)), dtype=float))
+
+        backbone_tfe, sidechain_tfe = get_tfe(seq, osmo, custom_tfe)
+
+        backbone_result = concentration * np.sum(np.array([
+            backbone_rasa[i] * backbone_tfe[i] for i in range(len(seq))]))
+        sidechain_result = concentration * np.sum(np.array([
+            sidechain_rasa[i] * sidechain_tfe[i] for i in range(len(seq))]))
+
+        results[osmo] = backbone_result + sidechain_result
 
     return results
 
-def protein_ddG_folding_lite(seq, sasa_list, osmolytes, backbone=True, triplet=False, custom_tfe=None, concentration=1.0):
+def protein_ddG_folding_lite(seq, backbone_sasa, sidechain_sasa, osmolytes, triplet=False, custom_tfe=None, concentration=1.0):
     """
-    Computes the change in free energy (dG) upon protein folding for one or multiple osmolytes.
+    Computes the change in free energy (ΔΔG) of a protein conformational change in the presence of one or multiple osmolytes.
 
     Parameters:
-        seq (str): The sequence of interest, as one-letter code.
-        sasa_list (list): A list of the sasa values for each residue in the protein of interest.
+        seq (str): The amino acid sequence of the protein, using one-letter codes.
+        backbone_sasa (list): A list of solvent-accessible surface area (SASA) values for the backbone of each residue.
+        sidechain_sasa (list): A list of SASA values for the sidechain of each residue.
         osmolytes (str or list): A single osmolyte or a list of osmolytes.
-        backbone (bool): Whether to account for the protein backbone. Default = True.
-        triplet (bool): Whether to return the triplet (folded, unfolded, and their difference). Default = False.
-        custom_tfe (dict, optional): A dictionary with custom TFE values for osmolytes.
-        concentration (float): The concentration in molar to scale the result. Default = 1.0.
+        triplet (bool): Whether to return a tuple with the folded and unfolded free energies along with their difference. Default = False.
+        custom_tfe (dict, optional): A dictionary with custom transfer free energy (TFE) values for osmolytes.
+        concentration (float): The osmolyte concentration in molar units, used to scale the result. Default = 1.0.
 
     Returns:
-        dict: A dictionary where each key is an osmolyte, and the value is either a tuple (folded_dG, unfolded_dG, dG_change) or the free energy difference.
+        dict: A dictionary where each key is an osmolyte, and the value is either a tuple (folded_dG, unfolded_dG, ΔG_change) if triplet=True,
+              or the free energy difference (ΔG_change) if triplet=False.
     """
     if isinstance(osmolytes, str):
         osmolytes = [osmolytes]
 
-    folded_dG = protein_folded_dG_lite(seq, sasa_list, osmolytes, backbone, custom_tfe, concentration)
-    unfolded_dG = protein_unfolded_dG_lite(seq, osmolytes, backbone, custom_tfe, concentration)
+    folded_dG = protein_folded_dG_lite(seq, backbone_sasa, sidechain_sasa, osmolytes, custom_tfe, concentration)
+    unfolded_dG = protein_unfolded_dG_lite(seq, osmolytes, custom_tfe, concentration)
 
     results = {}
     for osmo in osmolytes:
