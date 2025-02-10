@@ -106,7 +106,8 @@ Below is an example of calculating the ΔΔG of a protein using custom SASA valu
 
    output = protein_ddG_folding_lite(
        seq="SEQWENCE", 
-       sasa_list = [130, 98, 73, 76, 110, 115, 102, 180]
+       backbone_sasa = [92, 42, 38, 51, 82, 63, 71, 48]
+       sidechain_sasa = [130, 98, 73, 76, 110, 115, 102, 180]
        osmolytes=["trehalose", "tmao", "betaine"], 
        concentration=1.0,
        triplet = False
