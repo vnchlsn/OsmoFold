@@ -5,6 +5,24 @@
 
 A summary of the functions in `osmofold_local.py` (the core script of OsmoFold) and how they work.
 
+clean_dict()
+--------
+
+Recursively converts all numpy float64 objects in a dictionary, list, or tuple to Python floats.
+
+**Arguments:**
+
+- **`d`**: A dictionary, list, or tuple that may contain numpy float64 objects.
+  
+      Example: `{ "a": np.float64(1.23), "b": [np.float64(2.34), {"c": np.float64(3.45)}] }`
+
+**Returns:**  
+A dictionary, list, or tuple with all numpy float64 objects converted to Python floats.
+
+   Example: `{ "a": 1.23, "b": [2.34, {"c": 3.45}] }`
+
+---
+
 get_max_sasa_list()
 ------------------
 

@@ -4,6 +4,30 @@ import numpy as np
 from osmofold import osmofold_local
 import mdtraj
 
+class TestCleanDict(unittest.TestCase):
+    
+    def test_clean_dict_with_nested_structure(self):
+        data = {
+            "a": np.float64(1.23),
+            "b": [np.float64(2.34), {"c": np.float64(3.45)}],
+            "d": (np.float64(4.56), {"e": np.float64(5.67)})
+        }
+        expected = {
+            "a": 1.23,
+            "b": [2.34, {"c": 3.45}],
+            "d": (4.56, {"e": 5.67})
+        }
+        self.assertEqual(osmofold_local.clean_dict(data), expected)
+
+    def test_clean_dict_with_no_np_float64(self):
+        data = {"a": 1.23, "b": [2.34, {"c": 3.45}], "d": (4.56, {"e": 5.67})}
+        self.assertEqual(osmofold_local.clean_dict(data), data)
+
+    def test_clean_dict_np_float64(self):
+        data = {"a": np.float64(10.5), "b": [np.float64(20.6)]}
+        expected = {"a": 10.5, "b": [20.6]}
+        self.assertEqual(osmofold_local.clean_dict(data), expected)
+
 class TestGetMaxSasaList(unittest.TestCase):
     
     def test_return_type(self):

@@ -1,6 +1,27 @@
 import numpy as np
 from soursop.sstrajectory import SSTrajectory
 
+def clean_dict(d):
+    """
+    Recursively converts all numpy float64 objects in a dictionary to Python floats.
+
+    Args:
+        d (dict, list, or tuple): A nested dictionary, list, or tuple that may contain numpy float64 objects.
+
+    Returns:
+        dict, list, or tuple: The same structure with numpy float64 objects converted to Python floats.
+    """
+    if isinstance(d, dict):
+        return {k: clean_dict(v) for k, v in d.items()}
+    elif isinstance(d, list):
+        return [clean_dict(v) for v in d]
+    elif isinstance(d, tuple):
+        return tuple(clean_dict(v) for v in d)
+    elif isinstance(d, np.float64):
+        return float(d)
+    else:
+        return d
+
 def get_max_sasa_list():
     """
     Returns a list of approximate SASA (Solvent Accessible Surface Area) values for each amino acid in a disordered chain.
@@ -375,7 +396,7 @@ def protein_unfolded_dG(pdb, osmolytes, custom_tfe=None, concentration=1.0, spli
 
         results["All"] = chain_results
 
-    return results
+    return clean_dict(results)
 
 def protein_folded_dG(pdb, osmolytes, custom_tfe=None, concentration=1.0, split_chains=False):
     """
@@ -425,7 +446,7 @@ def protein_folded_dG(pdb, osmolytes, custom_tfe=None, concentration=1.0, split_
         else:
             results.update(chain_results)
 
-    return results
+    return clean_dict(results)
 
 def protein_ddG_folding(pdb, osmolytes, triplet=False, custom_tfe=None, concentration=1.0, split_chains = False):
     """
@@ -469,4 +490,4 @@ def protein_ddG_folding(pdb, osmolytes, triplet=False, custom_tfe=None, concentr
             ddG = f_dG - u_dG
             results[osmolyte] = (f_dG, u_dG, ddG) if triplet else ddG
     
-    return results
+    return clean_dict(results)

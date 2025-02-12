@@ -1,5 +1,5 @@
 import numpy as np
-from .osmofold_local import sasa_to_rasa, get_tfe
+from .osmofold_local import sasa_to_rasa, get_tfe, clean_dict
     
 def read_fasta(fasta_path):
     """
@@ -57,7 +57,7 @@ def protein_unfolded_dG_lite(seq, osmolytes, custom_tfe=None, concentration=1.0)
 
         results[osmo] = tfe
 
-    return results
+    return clean_dict(results)
 
 def protein_folded_dG_lite(seq, backbone_sasa, sidechain_sasa, osmolytes, custom_tfe=None, concentration=1.0):
     """
@@ -92,7 +92,7 @@ def protein_folded_dG_lite(seq, backbone_sasa, sidechain_sasa, osmolytes, custom
 
         results[osmo] = backbone_result + sidechain_result
 
-    return results
+    return clean_dict(results)
 
 def protein_ddG_folding_lite(seq, backbone_sasa, sidechain_sasa, osmolytes, triplet=False, custom_tfe=None, concentration=1.0):
     """
@@ -124,4 +124,4 @@ def protein_ddG_folding_lite(seq, backbone_sasa, sidechain_sasa, osmolytes, trip
         else:
             results[osmo] = folded_dG[osmo] - unfolded_dG[osmo]
 
-    return results
+    return clean_dict(results)
