@@ -78,7 +78,7 @@ def process_pdb(directory, osmolytes, custom_tfe, pdb_file, concentration=1.0, s
                 results["All"]["protein_length"] += chain_length  # Sum chain lengths
 
             # Retrieve osmolyte energy values, ensuring correct label handling
-            chain_osmolyte_results = osmolyte_results.get(label, {}) if split_chains else osmolyte_results.get("All", {})
+            chain_osmolyte_results = osmolyte_results if not split_chains else osmolyte_results.get(label, {})
 
             for osmolyte in osmolytes:
                 # Extract folding energy values or default to None
