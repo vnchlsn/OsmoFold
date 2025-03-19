@@ -1,6 +1,6 @@
 # Welcome to OsmoFold v.0.4.0
 
-Vincent Nicholson<sup>1</sup> and Thomas C. Boothby<sup>1</sup>
+Vincent Nicholson<sup>1</sup>, Sujina Maharjan<sup>1</sup>, Thomas C. Boothby<sup>1</sup>
 
 <sup>1</sup> - Department of Molecular Biology, Univeristy of Wyoming, Laramie WY
 
