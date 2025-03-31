@@ -1,8 +1,9 @@
 # Welcome to OsmoFold v.0.4.0
 
-Vincent Nicholson<sup>1</sup>, Sujina Maharjan<sup>1</sup>, Thomas C. Boothby<sup>1</sup>
+Vincent Nicholson<sup>1</sup>, Sujina Maharjan<sup>1</sup>, Shahar Sukenik<sup>2</sup>, Thomas C. Boothby<sup>1</sup>
 
 <sup>1</sup> - Department of Molecular Biology, Univeristy of Wyoming, Laramie WY
+<sup>2</sup> - Department of Chemistry, College of Arts and Sciences, Syracuse University, Syracuse NY
 
 OsmoFold is a tool that uses Auton and Bolen's empherical transfer free energy measurements to calculate the effect of osmolytes on protein folding. If you haven't already done so, we recommend reading the following literature.
 
