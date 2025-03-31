@@ -6,9 +6,10 @@ Overview
 An Introduction to OsmoFold
 ---------------------------
 
-Vincent Nicholson¹, Sujina Maharjan¹, Thomas C. Boothby¹
+Vincent Nicholson¹, Sujina Maharjan¹, Shahar Sukenik², Thomas C. Boothby¹
 
 ¹ Department of Molecular Biology, University of Wyoming, Laramie WY
+² Department of Chemistry, College of Arts and Sciences, Syracuse University, Syracuse, NY
 
 **OsmoFold** is a tool that uses Auton and Bolen's empirical transfer free energy measurements to calculate the effect of osmolytes on protein folding. 
 
