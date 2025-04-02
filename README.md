@@ -1,4 +1,4 @@
-# Welcome to OsmoFold v.0.4.0
+# Welcome to OsmoFold v.0.4.1
 
 Vincent Nicholson<sup>1</sup>, Sujina Maharjan<sup>1</sup>, Shahar Sukenik<sup>2</sup>, Thomas C. Boothby<sup>1</sup>
 

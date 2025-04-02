@@ -33,7 +33,7 @@ class TestProcessPDB(unittest.TestCase):
     
     @patch("os.path.join", return_value="mocked_path.pdb")
     @patch("osmofold.parallel.extract_sequence", return_value="SEQ")
-    @patch("osmofold.parallel.protein_ddG_folding", return_value={"All": {"Osm1": (1.0, 2.0, 3.0)}})
+    @patch("osmofold.parallel.protein_ddG_folding", return_value={"Osm1": (1.0, 2.0, 3.0)})
     def test_process_pdb_no_split_chains(
         self, mock_ddG_folding, mock_extract_seq, mock_path_join
     ):
