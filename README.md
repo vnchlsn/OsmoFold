@@ -21,3 +21,5 @@ protective function during drying](https://elifesciences.org/reviewed-preprints/
 3.   [Osmolyte-IDP Interactions During Desiccation](https://www.sciencedirect.com/science/article/pii/S1877117324001765?via%3Dihub)
 
 In short, OsmoFold will quantitatively asses the impact of several omsolytes on a given protein conformational change. Please note that OsmoFold does **not guarentee that said conformational change is physiologically relevant.** To put it simply, OsmoFold requires the existence of a known, binary conformational change in the protein(s) of interest. Additionally, it cannot rule out the presence of specific protein small molecule interactions, such as direct binding. In general, OsmoFold should be used to support experimental data, not replace it.
+
+[Try OsmoFold as a Colab Notebook](https://colab.research.google.com/drive/1qBnIIWq-4Z_YjWDEhtJ8wOgOXQpSbuPd?usp=sharing)
