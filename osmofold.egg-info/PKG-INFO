@@ -1,3 +1,24 @@
+Metadata-Version: 2.1
+Name: osmofold
+Version: 0.5.0
+Summary: A package to calculate protein free energy contributions in various osmolyte environments.
+Home-page: https://github.com/vnchsln/osmofold
+Author: Vincent Nicholson
+Author-email: vincentnicholson07@gmail.com
+Classifier: Programming Language :: Python :: 3
+Classifier: Programming Language :: Python :: 3.9
+Classifier: Programming Language :: Python :: 3.10
+Classifier: Programming Language :: Python :: 3.11
+Classifier: Programming Language :: Python :: 3.12
+Classifier: License :: OSI Approved :: MIT License
+Classifier: Intended Audience :: Developers
+Classifier: Intended Audience :: Science/Research
+Classifier: Topic :: Scientific/Engineering :: Bio-Informatics
+Classifier: Topic :: Scientific/Engineering :: Chemistry
+Classifier: Operating System :: OS Independent
+Requires-Python: >=3.9
+Description-Content-Type: text/markdown
+
 # Welcome to OsmoFold v.0.5.0
 
 Vincent Nicholson<sup>1</sup>, Sujina Maharjan<sup>1</sup>, Shahar Sukenik<sup>2</sup>, Thomas C. Boothby<sup>1</sup>

@@ -5,7 +5,7 @@
 # -- Project information -----------------------------------------------------
 project = "OsmoFold"
 author = "Vincent Nicholson"
-release = "0.4.1"  # The full version, including alpha/beta/rc tags
+release = "0.5.0"  # The full version, including alpha/beta/rc tags
 
 # -- General configuration ---------------------------------------------------
 extensions = [

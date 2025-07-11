@@ -94,7 +94,7 @@ In this example, `trehalose` stabilizes the folded state of both chains. `tmao` 
 Using Custom Solvent Accessible Surface Area (SASA) Values
 ------------------------
 
-The default OsmoFold methods use `SOURSOP <https://github.com/holehouse-lab/soursop>`_, a software suite from Alex Holehouse and Rohit Pappu, to calculate Solvent Accessible Surface Area (SASA) values.
+The default OsmoFold methods use MDTraj to calculate Solvent Accessible Surface Area (SASA) values.
 
 However, OsmoFold does offer users the option to use SASA values calculated via other means. As a result, this additional functionality does not require a .pdb file to execute.
 

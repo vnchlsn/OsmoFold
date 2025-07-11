@@ -50,8 +50,8 @@ class TestGetMaxSasaList(unittest.TestCase):
     def test_expected_values(self):
         """Test that specific values are correct."""
         result = osmofold_local.get_max_sasa_list()
-        self.assertAlmostEqual(result["backbone"]["A"], 27.85)
-        self.assertAlmostEqual(result["sidechain"]["R"], 171.10)
+        self.assertAlmostEqual(result["backbone"]["A"], 46)
+        self.assertAlmostEqual(result["sidechain"]["R"], 196)
     
     def test_all_amino_acids_present(self):
         """Test that all 20 amino acids are present in both backbone and sidechain."""
@@ -59,6 +59,86 @@ class TestGetMaxSasaList(unittest.TestCase):
         result = osmofold_local.get_max_sasa_list()
         self.assertEqual(set(result["backbone"].keys()), expected_amino_acids)
         self.assertEqual(set(result["sidechain"].keys()), expected_amino_acids)
+
+class TestGetUnfoldedSasaList(unittest.TestCase):
+    
+    def test_return_type(self):
+        """Test that the function returns a dictionary."""
+        result = osmofold_local.get_unfolded_sasa_list()
+        self.assertIsInstance(result, dict)
+    
+    def test_keys_exist(self):
+        """Test that the dictionary contains both 'backbone' and 'sidechain' keys."""
+        result = osmofold_local.get_unfolded_sasa_list()
+        self.assertIn("backbone", result)
+        self.assertIn("sidechain", result)
+    
+    def test_inner_structure(self):
+        """Test that both 'backbone' and 'sidechain' contain dictionaries."""
+        result = osmofold_local.get_unfolded_sasa_list()
+        self.assertIsInstance(result["backbone"], dict)
+        self.assertIsInstance(result["sidechain"], dict)
+    
+    def test_expected_values(self):
+        """Test that specific values are correct."""
+        result = osmofold_local.get_unfolded_sasa_list()
+        self.assertAlmostEqual(result["backbone"]["A"], 27.85)
+        self.assertAlmostEqual(result["sidechain"]["R"], 171.10)
+    
+    def test_all_amino_acids_present(self):
+        """Test that all 20 amino acids are present in both backbone and sidechain."""
+        expected_amino_acids = set("ARNDCEQGHILKMFPSTWYV")
+        result = osmofold_local.get_unfolded_sasa_list()
+        self.assertEqual(set(result["backbone"].keys()), expected_amino_acids)
+        self.assertEqual(set(result["sidechain"].keys()), expected_amino_acids)
+
+class TestGetUnfoldedSasaFromSequence(unittest.TestCase):
+
+    def test_return_type(self):
+        """Test that the function returns a tuple of two lists."""
+        result = osmofold_local.get_unfolded_sasa_from_sequence("ACD")
+        self.assertIsInstance(result, tuple)
+        self.assertEqual(len(result), 2)
+        self.assertIsInstance(result[0], list)
+        self.assertIsInstance(result[1], list)
+
+    def test_list_lengths_match_sequence(self):
+        """Test that the returned lists have the same length as the input sequence."""
+        sequence = "GQY"
+        backbone_sasa, sidechain_sasa = osmofold_local.get_unfolded_sasa_from_sequence(sequence)
+        self.assertEqual(len(backbone_sasa), len(sequence))
+        self.assertEqual(len(sidechain_sasa), len(sequence))
+
+    def test_known_values(self):
+        """Test that the function returns correct values for known residues."""
+        result = osmofold_local.get_unfolded_sasa_from_sequence("AG")
+        self.assertAlmostEqual(result[0][0], 27.85)  # backbone A
+        self.assertAlmostEqual(result[1][0], 55.10)  # sidechain A
+        self.assertAlmostEqual(result[0][1], 65.15)  # backbone G
+        self.assertAlmostEqual(result[1][1], 1.00)   # sidechain G
+
+    def test_all_20_amino_acids(self):
+        """Test that the function handles all 20 standard amino acids."""
+        sequence = "ARNDCEQGHILKMFPSTWYV"
+        backbone_sasa, sidechain_sasa = osmofold_local.get_unfolded_sasa_from_sequence(sequence)
+        self.assertEqual(len(backbone_sasa), 20)
+        self.assertEqual(len(sidechain_sasa), 20)
+
+    def test_case_insensitivity(self):
+        """Test that lowercase input is handled correctly."""
+        result_upper = osmofold_local.get_unfolded_sasa_from_sequence("ARN")
+        result_lower = osmofold_local.get_unfolded_sasa_from_sequence("arn")
+        self.assertEqual(result_upper, result_lower)
+
+    def test_invalid_amino_acid_raises(self):
+        """Test that an invalid character raises a ValueError."""
+        with self.assertRaises(ValueError):
+            osmofold_local.get_unfolded_sasa_from_sequence("AXZ")
+
+    def test_empty_sequence(self):
+        """Test that an empty sequence returns two empty lists."""
+        result = osmofold_local.get_unfolded_sasa_from_sequence("")
+        self.assertEqual(result, ([], []))
 
 class TestAminoToEnergy(unittest.TestCase):
     def test_return_type(self):
@@ -336,89 +416,190 @@ class TestSasaToRasa(unittest.TestCase):
         self.assertEqual(sidechain_rasa, [])
 
 class TestGetPDBInfo(unittest.TestCase):
-    
-    @patch("osmofold.osmofold_local.SSTrajectory")
-    def test_valid_pdb(self, MockSSTrajectory):
-        mock_pdb = MagicMock()
-        mock_pdb._SSTrajectory__get_all_proteins.return_value.get_amino_acid_sequence.return_value = "ACDE"
-        mock_pdb._SSTrajectory__get_all_proteins.return_value.get_all_SASA.side_effect = [[[1.1, 2.2, 3.3, 4.4]], [[0.5, 1.5, 2.5, 3.5]]]
-        MockSSTrajectory.return_value = mock_pdb
-        
-        result = osmofold_local.get_pdb_info("dummy.pdb")
-        self.assertEqual(result, ("ACDE", [1.1, 2.2, 3.3, 4.4], [0.5, 1.5, 2.5, 3.5]))
-    
-    @patch("osmofold.osmofold_local.SSTrajectory")
-    def test_empty_pdb(self, MockSSTrajectory):
-        mock_pdb = MagicMock()
-        mock_pdb._SSTrajectory__get_all_proteins.return_value.get_amino_acid_sequence.return_value = ""
-        mock_pdb._SSTrajectory__get_all_proteins.return_value.get_all_SASA.side_effect = [[], []]
-        MockSSTrajectory.return_value = mock_pdb
-        
-        with self.assertRaises(Exception) as context:
-            osmofold_local.get_pdb_info("invalid.pdb")
-        self.assertEqual(str(context.exception), "list index out of range")
 
-    @patch("osmofold.osmofold_local.SSTrajectory")
-    def test_invalid_pdb(self, MockSSTrajectory):
-        MockSSTrajectory.side_effect = Exception("Invalid PDB format")
+    @patch("osmofold.osmofold_local.extract_sequence")
+    @patch("osmofold.osmofold_local.md.shrake_rupley")
+    @patch("osmofold.osmofold_local.md.load_pdb")
+    def test_valid_pdb(self, mock_load_pdb, mock_shrake_rupley, mock_extract_sequence):
+        # Setup mocks
+        mock_traj = MagicMock()
+        
+        # Mock residues and atoms in topology
+        mock_atom_bb = MagicMock(index=0, is_backbone=True)
+        mock_atom_sc = MagicMock(index=1, is_backbone=False)
+        mock_residue = MagicMock(atoms=[mock_atom_bb, mock_atom_sc])
+        mock_traj.topology.residues = [mock_residue]
+        
+        mock_load_pdb.return_value = mock_traj
+        
+        # Shrake-rupley returns a numpy array inside a list (frames)
+        mock_shrake_rupley.return_value = [[1.1, 2.2]]  # indices 0,1
+        
+        # Mock sequence extraction
+        mock_extract_sequence.return_value = ["A"]  # single residue sequence
+        
+        # Call function
+        seq, bb_sasa, sc_sasa = osmofold_local.get_pdb_info("dummy.pdb")
+        
+        # Check results
+        self.assertEqual(seq, ["A"])
+        self.assertEqual(bb_sasa, [1.1])
+        self.assertEqual(sc_sasa, [2.2])
+
+    @patch("osmofold.osmofold_local.extract_sequence")
+    @patch("osmofold.osmofold_local.md.shrake_rupley")
+    @patch("osmofold.osmofold_local.md.load_pdb")
+    def test_empty_pdb(self, mock_load_pdb, mock_shrake_rupley, mock_extract_sequence):
+        # Empty residues list simulates empty PDB topology
+        mock_traj = MagicMock()
+        mock_traj.topology.residues = []
+        mock_load_pdb.return_value = mock_traj
+        
+        mock_shrake_rupley.return_value = [[]]
+        mock_extract_sequence.return_value = []
+        
+        # Call function and expect empty lists
+        seq, bb_sasa, sc_sasa = osmofold_local.get_pdb_info("empty.pdb")
+        self.assertEqual(seq, [])
+        self.assertEqual(bb_sasa, [])
+        self.assertEqual(sc_sasa, [])
+
+    @patch("osmofold.osmofold_local.md.load_pdb")
+    def test_invalid_pdb(self, mock_load_pdb):
+        # Simulate MDTraj raising an exception on invalid PDB
+        mock_load_pdb.side_effect = Exception("Invalid PDB format")
         
         with self.assertRaises(Exception) as context:
             osmofold_local.get_pdb_info("invalid.pdb")
         self.assertEqual(str(context.exception), "Invalid PDB format")
 
+
 class TestGetChainInfo(unittest.TestCase):
-    
-    @patch("osmofold.osmofold_local.SSTrajectory")
-    def test_valid_pdb_single_chain(self, MockSSTrajectory):
-        mock_pdb = MagicMock()
+
+    @patch("osmofold.osmofold_local.extract_sequence")
+    @patch("osmofold.osmofold_local.extract_sequences_by_chains")
+    @patch("osmofold.osmofold_local.md.shrake_rupley")
+    @patch("osmofold.osmofold_local.md.load_pdb")
+    def test_valid_pdb_single_chain(self, mock_load_pdb, mock_shrake_rupley,
+                                    mock_extract_sequences_by_chains, mock_extract_sequence):
+        # Setup mocks
+        mock_traj = MagicMock()
         
-        # Create a separate MagicMock for proteins
-        mock_proteins = MagicMock()
-        mock_proteins.get_amino_acid_sequence.return_value = "ACDE"
-        mock_proteins.get_all_SASA.side_effect = [[[1.1, 2.2, 3.3, 4.4]], [[0.5, 1.5, 2.5, 3.5]]]
-
-        mock_pdb._SSTrajectory__get_all_proteins.return_value = mock_proteins
-        mock_pdb.proteinTrajectoryList = [mock_proteins]
-
-        MockSSTrajectory.return_value = mock_pdb
-
+        # Create one chain with one residue with two atoms (backbone, sidechain)
+        mock_atom_bb = MagicMock(index=0, is_backbone=True)
+        mock_atom_sc = MagicMock(index=1, is_backbone=False)
+        mock_residue = MagicMock(atoms=[mock_atom_bb, mock_atom_sc])
+        mock_chain = MagicMock(residues=[mock_residue])
+        mock_traj.topology.chains = [mock_chain]
+        mock_traj.topology.residues = [mock_residue]
+        
+        mock_load_pdb.return_value = mock_traj
+        
+        # SASA values for two atoms
+        mock_shrake_rupley.return_value = [[1.1, 2.2]]  # single frame
+        
+        # Chain sequences
+        mock_extract_sequences_by_chains.return_value = ["ACDE"]
+        mock_extract_sequence.return_value = "ACDE"
+        
         result = osmofold_local.get_chain_info("dummy.pdb")
         
-        self.assertEqual(result["Chain 1"], ("ACDE", [1.1, 2.2, 3.3, 4.4], [0.5, 1.5, 2.5, 3.5]))
-    
-    @patch("osmofold.osmofold_local.SSTrajectory")
-    def test_valid_pdb_multiple_chains(self, MockSSTrajectory):
-        mock_pdb = MagicMock()
-        mock_pdb._SSTrajectory__get_all_proteins.return_value.get_amino_acid_sequence.return_value = "ACDEFGH"
-        mock_pdb._SSTrajectory__get_all_proteins.return_value.get_all_SASA.side_effect = [[list(range(1, 8))], [list(range(8, 15))]]
-        mock_chain1 = MagicMock()
-        mock_chain1.get_amino_acid_sequence.return_value = "ACD"
-        mock_chain2 = MagicMock()
-        mock_chain2.get_amino_acid_sequence.return_value = "EFGH"
-        mock_pdb.proteinTrajectoryList = [mock_chain1, mock_chain2]
-        MockSSTrajectory.return_value = mock_pdb
-        
+        self.assertIn("Chain 1", result)
+        seq, bb_sasa, sc_sasa = result["Chain 1"]
+        self.assertEqual(seq, "ACDE")
+        self.assertEqual(bb_sasa, [1.1])
+        self.assertEqual(sc_sasa, [2.2])
+
+        # Check "All" key
+        full_seq, all_bb_sasa, all_sc_sasa = result["All"]
+        self.assertEqual(full_seq, "ACDE")
+        self.assertEqual(all_bb_sasa, [1.1])
+        self.assertEqual(all_sc_sasa, [2.2])
+
+    @patch("osmofold.osmofold_local.extract_sequence")
+    @patch("osmofold.osmofold_local.extract_sequences_by_chains")
+    @patch("osmofold.osmofold_local.md.shrake_rupley")
+    @patch("osmofold.osmofold_local.md.load_pdb")
+    def test_valid_pdb_multiple_chains(self, mock_load_pdb, mock_shrake_rupley,
+                                       mock_extract_sequences_by_chains, mock_extract_sequence):
+        # Setup mocks
+        mock_traj = MagicMock()
+
+        # Chain 1: 1 residue with 2 atoms
+        mock_atom_bb1 = MagicMock(index=0, is_backbone=True)
+        mock_atom_sc1 = MagicMock(index=1, is_backbone=False)
+        mock_residue1 = MagicMock(atoms=[mock_atom_bb1, mock_atom_sc1])
+        mock_chain1 = MagicMock(residues=[mock_residue1])
+
+        # Chain 2: 2 residues, each with 2 atoms (indices 2,3 and 4,5)
+        mock_atom_bb2 = MagicMock(index=2, is_backbone=True)
+        mock_atom_sc2 = MagicMock(index=3, is_backbone=False)
+        mock_residue2 = MagicMock(atoms=[mock_atom_bb2, mock_atom_sc2])
+
+        mock_atom_bb3 = MagicMock(index=4, is_backbone=True)
+        mock_atom_sc3 = MagicMock(index=5, is_backbone=False)
+        mock_residue3 = MagicMock(atoms=[mock_atom_bb3, mock_atom_sc3])
+
+        mock_chain2 = MagicMock(residues=[mock_residue2, mock_residue3])
+
+        mock_traj.topology.chains = [mock_chain1, mock_chain2]
+        mock_traj.topology.residues = [mock_residue1, mock_residue2, mock_residue3]
+
+        mock_load_pdb.return_value = mock_traj
+
+        # SASA values for 6 atoms
+        mock_shrake_rupley.return_value = [[
+            1, 8,  # Chain 1 atoms (bb, sc)
+            2, 9,  # Chain 2 residue 1 atoms
+            3, 10  # Chain 2 residue 2 atoms
+        ]]
+
+        # Chain sequences
+        mock_extract_sequences_by_chains.return_value = ["A", "BC"]
+        mock_extract_sequence.return_value = "ABC"
+
         result = osmofold_local.get_chain_info("dummy.pdb")
-        self.assertEqual(result["Chain 1"], ("ACD", [1, 2, 3], [8, 9, 10]))
-        self.assertEqual(result["Chain 2"], ("EFGH", [4, 5, 6, 7], [11, 12, 13, 14]))
-        self.assertEqual(result["All"], ("ACDEFGH", list(range(1, 8)), list(range(8, 15))))
-    
-    @patch("osmofold.osmofold_local.SSTrajectory")
-    def test_empty_pdb(self, MockSSTrajectory):
-        mock_pdb = MagicMock()
-        mock_pdb._SSTrajectory__get_all_proteins.return_value.get_amino_acid_sequence.return_value = ""
-        mock_pdb._SSTrajectory__get_all_proteins.return_value.get_all_SASA.side_effect = [[], []]
-        mock_pdb.proteinTrajectoryList = []
-        MockSSTrajectory.return_value = mock_pdb
+
+        self.assertEqual(result["Chain 1"], ("A", [1.0], [8.0]))
+        self.assertEqual(result["Chain 2"], ("BC", [2.0, 3.0], [9.0, 10.0]))
         
-        with self.assertRaises(Exception) as context:
-            osmofold_local.get_chain_info("invalid.pdb")
-        self.assertEqual(str(context.exception), "list index out of range")
-    
-    @patch("osmofold.osmofold_local.SSTrajectory")
-    def test_invalid_pdb(self, MockSSTrajectory):
-        MockSSTrajectory.side_effect = Exception("Invalid PDB format")
-        
+        # More precise check for Chain 2
+        bb_chain2 = result["Chain 2"][1]
+        sc_chain2 = result["Chain 2"][2]
+        self.assertEqual(bb_chain2, [2.0, 3.0])
+        self.assertEqual(sc_chain2, [9.0, 10.0])
+
+        # Overall all residues
+        full_seq, all_bb, all_sc = result["All"]
+        self.assertEqual(full_seq, "ABC")
+        self.assertEqual(all_bb, [1.0, 2.0, 3.0])
+        self.assertEqual(all_sc, [8.0, 9.0, 10.0])
+
+    @patch("osmofold.osmofold_local.extract_sequence")
+    @patch("osmofold.osmofold_local.extract_sequences_by_chains")
+    @patch("osmofold.osmofold_local.md.shrake_rupley")
+    @patch("osmofold.osmofold_local.md.load_pdb")
+    def test_empty_pdb(self, mock_load_pdb, mock_shrake_rupley,
+                       mock_extract_sequences_by_chains, mock_extract_sequence):
+        mock_traj = MagicMock()
+        mock_traj.topology.chains = []
+        mock_traj.topology.residues = []
+        mock_load_pdb.return_value = mock_traj
+
+        mock_shrake_rupley.return_value = [[]]
+        mock_extract_sequences_by_chains.return_value = []
+        mock_extract_sequence.return_value = ""
+
+        result = osmofold_local.get_chain_info("empty.pdb")
+
+        self.assertEqual(result, {
+            "All": ("", [], [])
+        })
+
+    @patch("osmofold.osmofold_local.md.load_pdb")
+    def test_invalid_pdb(self, mock_load_pdb):
+        mock_load_pdb.side_effect = Exception("Invalid PDB format")
+
         with self.assertRaises(Exception) as context:
             osmofold_local.get_chain_info("invalid.pdb")
         self.assertEqual(str(context.exception), "Invalid PDB format")
@@ -427,26 +608,34 @@ class TestProteinUnfoldedDG(unittest.TestCase):
       
     @patch("osmofold.osmofold_local.extract_sequence")
     @patch("osmofold.osmofold_local.get_tfe")
-    def test_single_osmolyte(self, mock_get_tfe, mock_extract_sequence):
+    @patch("osmofold.osmofold_local.get_unfolded_sasa_from_sequence")
+    @patch("osmofold.osmofold_local.sasa_to_rasa")
+    def test_single_osmolyte(self, mock_sasa_to_rasa, mock_get_unfolded_sasa_from_sequence, mock_get_tfe, mock_extract_sequence):
         mock_extract_sequence.return_value = "ABCDE"
         mock_get_tfe.return_value = ([1.0] * 5, [0.5] * 5)
+        mock_get_unfolded_sasa_from_sequence.return_value = ([38] * 5, [100 * 5])
+        mock_sasa_to_rasa.return_value = ([0.9] * 5, [0.8] * 5)
         pdb = "test.pdb"
         osmolytes = "urea"
-        expected_dG = (1.0 * 5 + 0.5 * 5)
+        expected_dG = (1.0 * 5 * 0.9 + 0.5 * 5 * 0.8)
         
         result = osmofold_local.protein_unfolded_dG(pdb, osmolytes)
         self.assertEqual(result, {"urea": expected_dG})
     
     @patch("osmofold.osmofold_local.extract_sequence")
     @patch("osmofold.osmofold_local.get_tfe")
-    def test_multiple_osmolytes(self, mock_get_tfe, mock_extract_sequence):
+    @patch("osmofold.osmofold_local.get_unfolded_sasa_from_sequence")
+    @patch("osmofold.osmofold_local.sasa_to_rasa")
+    def test_multiple_osmolytes(self, mock_sasa_to_rasa, mock_get_unfolded_sasa_from_sequence, mock_get_tfe, mock_extract_sequence):
         mock_extract_sequence.return_value = "ABCDE"
         mock_get_tfe.side_effect = [([1.0] * 5, [0.5] * 5), ([0.8] * 5, [0.3] * 5)]
+        mock_get_unfolded_sasa_from_sequence.return_value = ([38] * 5, [100 * 5])
+        mock_sasa_to_rasa.return_value = ([0.9] * 5, [0.8] * 5)
         pdb = "test.pdb"
         osmolytes = ["urea", "trehalose"]
         expected_dG = {
-            "urea": (1.0 * 5 + 0.5 * 5),
-            "trehalose": (0.8 * 5 + 0.3 * 5)
+            "urea": (1.0 * 5 * 0.9 + 0.5 * 5 * 0.8),
+            "trehalose": (0.8 * 5 * 0.9 + 0.3 * 5 * 0.8)
         }
         
         result = osmofold_local.protein_unfolded_dG(pdb, osmolytes)
@@ -454,7 +643,10 @@ class TestProteinUnfoldedDG(unittest.TestCase):
     
     @patch("osmofold.osmofold_local.extract_sequences_by_chains")
     @patch("osmofold.osmofold_local.get_tfe")
-    def test_split_chains(self, mock_get_tfe, mock_extract_sequences_by_chains):
+    @patch("osmofold.osmofold_local.get_unfolded_sasa_from_sequence")
+    @patch("osmofold.osmofold_local.sasa_to_rasa")
+    @patch("osmofold.osmofold_local.extract_sequence")
+    def test_split_chains(self, mock_extract_sequence, mock_sasa_to_rasa, mock_get_unfolded_sasa_from_sequence, mock_get_tfe, mock_extract_sequences_by_chains):
         mock_extract_sequences_by_chains.return_value = ["ABCDE", "FGHIJ"]
         
         # Three return values: Two for chains, one for the full sequence
@@ -463,30 +655,52 @@ class TestProteinUnfoldedDG(unittest.TestCase):
             ([0.8] * 5, [0.3] * 5),  # Chain 2
             ([0.9] * 10, [0.4] * 10)  # Full sequence (sum of chains)
         ]
+
+        mock_get_unfolded_sasa_from_sequence.side_effect = [
+            ([40] * 5, [100] * 5),  # Chain 1
+            ([30] * 5, [120] * 5),  # Chain 2
+            ([35] * 10, [110] * 10)  # Full sequence (sum of chains)
+        ]
+
+        mock_sasa_to_rasa.side_effect = [
+            ([0.8] * 5, [0.6] * 5),  # Chain 1
+            ([0.9] * 5, [0.8] * 5),  # Chain 2
+            ([0.85] * 10, [0.7] * 10)  # Full sequence (sum of chains)
+        ]
+
+        mock_extract_sequence.return_value = "ABCDEFGHIJ"
         
         pdb = "test.pdb"
         osmolytes = "urea"
         expected_dG = {
-            "Chain 1": {"urea": (1.0 * 5 + 0.5 * 5)},
-            "Chain 2": {"urea": (0.8 * 5 + 0.3 * 5)},
-            "All": {"urea": (0.9 * 10 + 0.4 * 10)}  # Full sequence calculation
+            "Chain 1": {"urea": (1.0 * 5 * 0.8 + 0.5 * 5 * 0.6)},
+            "Chain 2": {"urea": (0.8 * 5 * 0.9 + 0.3 * 5 * 0.8)},
+            "All": {"urea": (0.9 * 10 * 0.85 + 0.4 * 10 * 0.7)}  # Full sequence calculation
         }
 
         result = osmofold_local.protein_unfolded_dG(pdb, osmolytes, split_chains=True)
+        print(expected_dG)
+        print(result)
         self.assertEqual(result, expected_dG)
     
     @patch("osmofold.osmofold_local.extract_sequence")
     @patch("osmofold.osmofold_local.get_tfe")
-    def test_custom_tfe(self, mock_get_tfe, mock_extract_sequence):
+    @patch("osmofold.osmofold_local.get_unfolded_sasa_from_sequence")
+    @patch("osmofold.osmofold_local.sasa_to_rasa")
+    def test_custom_tfe(self, mock_sasa_to_rasa, mock_get_unfolded_sasa_from_sequence, mock_get_tfe, mock_extract_sequence):
         mock_extract_sequence.return_value = "ABCDE"
         mock_get_tfe.return_value = ([0.5] * 5, [0.2] * 5)
+        mock_get_unfolded_sasa_from_sequence.return_value = ([38] * 5, [100 * 5])
+        mock_sasa_to_rasa.return_value = ([0.9] * 5, [0.8] * 5)
         pdb = "test.pdb"
         osmolytes = "tfe"
         custom_tfe = {"tfe": 1.0}
-        expected_dG = (0.5 * 5 + 0.2 * 5)
+        expected_dG = (0.5 * 5 * 0.9 + 0.2 * 5 * 0.8)
         
         result = osmofold_local.protein_unfolded_dG(pdb, osmolytes, custom_tfe=custom_tfe)
-        self.assertEqual(result, {"tfe": expected_dG})
+        self.assertEqual(set(result), set({"tfe": expected_dG}))
+        for k in result:
+            self.assertAlmostEqual(result[k], {"tfe": expected_dG}[k])
     
     @patch("osmofold.osmofold_local.extract_sequence")
     @patch("osmofold.osmofold_local.get_tfe")

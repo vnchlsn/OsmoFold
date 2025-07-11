@@ -27,7 +27,6 @@ To install OsmoFold, follow these steps:
 
       pip install numpy
       pip install mdtraj
-      pip install soursop
 
 3. **Clone and install OsmoFold:**
 

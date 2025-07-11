@@ -48,46 +48,62 @@ class TestReadFasta(unittest.TestCase):
 class TestProteinUnfoldedDGLite(unittest.TestCase):
     
     @patch("osmofold.osmofold_lite.get_tfe")
-    def test_single_osmolyte(self, mock_get_tfe):
+    @patch("osmofold.osmofold_lite.get_unfolded_sasa_from_sequence")
+    @patch("osmofold.osmofold_lite.sasa_to_rasa")
+    def test_single_osmolyte(self, mock_sasa_to_rasa, mock_get_unfolded_sasa_from_sequence, mock_get_tfe):
         mock_get_tfe.return_value = ([1.0] * 5, [0.5] * 5)  # Mocked TFE values
+        mock_get_unfolded_sasa_from_sequence.return_value = ([38] * 5, [100] * 5)
+        mock_sasa_to_rasa.return_value = ([0.9] * 5, [0.8] * 5)
         seq = "ABCDE"
         osmolytes = "urea"
-        expected_dG = 1.5 * 5  # (1.0 + 0.5) * length of seq
+        expected_dG = 1.0 * 0.9 * 5 + 0.5 * 0.8 * 5
         
         result = osmofold_lite.protein_unfolded_dG_lite(seq, osmolytes)
         self.assertEqual(result, {"urea": expected_dG})
     
     @patch("osmofold.osmofold_lite.get_tfe")
-    def test_multiple_osmolytes(self, mock_get_tfe):
+    @patch("osmofold.osmofold_lite.get_unfolded_sasa_from_sequence")
+    @patch("osmofold.osmofold_lite.sasa_to_rasa")
+    def test_multiple_osmolytes(self, mock_sasa_to_rasa, mock_get_unfolded_sasa_from_sequence, mock_get_tfe):
         mock_get_tfe.side_effect = [([1.0] * 5, [0.5] * 5), ([0.8] * 5, [0.3] * 5)]
+        mock_get_unfolded_sasa_from_sequence.return_value = ([38] * 5, [100] * 5)
+        mock_sasa_to_rasa.return_value = ([0.9] * 5, [0.8] * 5)
         seq = "ABCDE"
         osmolytes = ["urea", "tmao"]
         expected_dG = {
-            "urea": 1.5 * 5,  # (1.0 + 0.5) * length of seq
-            "tmao": 1.1 * 5  # (0.8 + 0.3) * length of seq
+            "urea": 1.0 * 0.9 * 5 + 0.5 * 0.8 * 5,
+            "tmao": 0.8 * 0.9 * 5 + 0.3 * 0.8 * 5
         }
         
         result = osmofold_lite.protein_unfolded_dG_lite(seq, osmolytes)
         self.assertEqual(result, expected_dG)
     
     @patch("osmofold.osmofold_lite.get_tfe")
-    def test_custom_tfe(self, mock_get_tfe):
+    @patch("osmofold.osmofold_lite.get_unfolded_sasa_from_sequence")
+    @patch("osmofold.osmofold_lite.sasa_to_rasa")
+    def test_custom_tfe(self, mock_sasa_to_rasa, mock_get_unfolded_sasa_from_sequence, mock_get_tfe):
         mock_get_tfe.return_value = ([0.5] * 5, [0.2] * 5)
+        mock_get_unfolded_sasa_from_sequence.return_value = ([38] * 5, [100] * 5)
+        mock_sasa_to_rasa.return_value = ([0.9] * 5, [0.8] * 5)
         seq = "ABCDE"
         osmolytes = "tfe"
         custom_tfe = {"tfe": 1.0}
-        expected_dG = 0.7 * 5
+        expected_dG = 0.5 * 0.9 * 5 + 0.2 * 0.8 * 5
         
         result = osmofold_lite.protein_unfolded_dG_lite(seq, osmolytes, custom_tfe=custom_tfe)
         self.assertEqual(result, {"tfe": expected_dG})
     
     @patch("osmofold.osmofold_lite.get_tfe")
-    def test_different_concentration(self, mock_get_tfe):
+    @patch("osmofold.osmofold_lite.get_unfolded_sasa_from_sequence")
+    @patch("osmofold.osmofold_lite.sasa_to_rasa")
+    def test_different_concentration(self, mock_sasa_to_rasa, mock_get_unfolded_sasa_from_sequence, mock_get_tfe):
         mock_get_tfe.return_value = ([1.0] * 5, [0.5] * 5)
+        mock_get_unfolded_sasa_from_sequence.return_value = ([38] * 5, [100] * 5)
+        mock_sasa_to_rasa.return_value = ([0.9] * 5, [0.8] * 5)
         seq = "ABCDE"
         osmolytes = "urea"
         concentration = 2.0
-        expected_dG = 1.5 * 5 * 2.0
+        expected_dG = (1.0 * 0.9 * 5 + 0.5 * 0.8 * 5) * 2.0
         
         result = osmofold_lite.protein_unfolded_dG_lite(seq, osmolytes, concentration=concentration)
         self.assertEqual(result, {"urea": expected_dG})
@@ -102,11 +118,15 @@ class TestProteinUnfoldedDGLite(unittest.TestCase):
         self.assertEqual(result, {"urea": 0})
     
     @patch("osmofold.osmofold_lite.get_tfe")
-    def test_case_insensitivity(self, mock_get_tfe):
+    @patch("osmofold.osmofold_lite.get_unfolded_sasa_from_sequence")
+    @patch("osmofold.osmofold_lite.sasa_to_rasa")
+    def test_case_insensitivity(self, mock_sasa_to_rasa, mock_get_unfolded_sasa_from_sequence, mock_get_tfe):
         mock_get_tfe.return_value = ([1.0] * 5, [0.5] * 5)
+        mock_get_unfolded_sasa_from_sequence.return_value = ([38] * 5, [100] * 5)
+        mock_sasa_to_rasa.return_value = ([0.9] * 5, [0.8] * 5)
         seq = "ABCDE"
         osmolytes = "UREA"  # Uppercase input
-        expected_dG = 1.5 * 5
+        expected_dG = 1.0 * 0.9 * 5 + 0.5 * 0.8 * 5
         
         result = osmofold_lite.protein_unfolded_dG_lite(seq, osmolytes)
         self.assertEqual(result, {"urea": expected_dG})  # Should be converted to lowercase

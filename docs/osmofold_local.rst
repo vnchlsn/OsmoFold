@@ -32,6 +32,35 @@ A function that returns a list of maximum SASA (Solvent Accessible Surface Area)
 None.
 
 **Returns:**  
+A dictionary containing the max SASA of protein sidechains and backbones, based on their accessibility in a Gly-X-Gly tripeptide.
+
+.. code-block:: python
+
+    asa_max = {
+        "backbone": {
+            "A": 46, "R": 45, "N": 45, "D": 45, "C": 36,
+            "Q": 45, "E": 45, "G": 85, "H": 43, "I": 42,
+            "L": 43, "K": 44, "M": 44, "F": 43, "P": 38,
+            "S": 42, "T": 44, "W": 42, "Y": 42, "V": 43
+        },
+        "sidechain": {
+            "A": 67, "R": 196, "N": 113, "D": 106, "C": 104,
+            "Q": 144, "E": 138, "G": 1.00, "H": 151, "I": 140,
+            "L": 137, "K": 167, "M": 160, "F": 175, "P": 105,
+            "S": 80, "T": 102, "W": 217, "Y": 187, "V": 117
+        }}
+        
+---
+
+get_unfolded_sasa_list()
+------------------
+
+A function that returns a list of approximate unfolded SASA (Solvent Accessible Surface Area) values for each amino acid.
+
+**Arguments:**  
+None.
+
+**Returns:**  
 A dictionary containing the unfolded SASA of protein sidechains and backbones.
 
 .. code-block:: python
@@ -49,6 +78,26 @@ A dictionary containing the unfolded SASA of protein sidechains and backbones.
             "L": 109.55, "K": 150.65, "M": 122.40, "F": 129.25, "P": 87.00,
             "S": 66.50, "T": 84.25, "W": 156.55, "Y": 141.65, "V": 96.35
         }}
+        
+---
+
+get_unfolded_sasa_from_sequence()
+------------------
+
+A function that, given a single-letter amino acid sequence, returns a list of approximate backbone and sidechain SASA values.
+
+**Arguments:**  
+
+- **`sequence`**: A string containing the amino acid sequence for which you want to compute TFE values.  
+
+      Example: `"ACD"`
+      
+**Returns:**  
+ Tuple: Two lists of unfolded SASA values for each amino acid in the sequence (backbone, sidechain).
+ The indices correspond to the input sequence.
+
+   Example: `([27.85, 26.35, 26.00], [55.10, 72.95, 87.00])`
+
 ---
 
 amino_to_energy()
