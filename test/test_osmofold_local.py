@@ -425,8 +425,8 @@ class TestGetPDBInfo(unittest.TestCase):
         mock_traj = MagicMock()
         
         # Mock residues and atoms in topology
-        mock_atom_bb = MagicMock(index=0, is_backbone=True)
-        mock_atom_sc = MagicMock(index=1, is_backbone=False)
+        mock_atom_bb = MagicMock(index=0, is_sidechain=False)
+        mock_atom_sc = MagicMock(index=1, is_sidechain=True)
         mock_residue = MagicMock(atoms=[mock_atom_bb, mock_atom_sc])
         mock_traj.topology.residues = [mock_residue]
         
@@ -443,8 +443,8 @@ class TestGetPDBInfo(unittest.TestCase):
         
         # Check results
         self.assertEqual(seq, ["A"])
-        self.assertEqual(bb_sasa, [1.1])
-        self.assertEqual(sc_sasa, [2.2])
+        self.assertAlmostEqual(bb_sasa[0], [110][0]) #scaled by 100 because this returns in nm!
+        self.assertAlmostEqual(sc_sasa[0], [220][0]) #scaled by 100 because this returns in nm!
 
     @patch("osmofold.osmofold_local.extract_sequence")
     @patch("osmofold.osmofold_local.md.shrake_rupley")
@@ -486,8 +486,8 @@ class TestGetChainInfo(unittest.TestCase):
         mock_traj = MagicMock()
         
         # Create one chain with one residue with two atoms (backbone, sidechain)
-        mock_atom_bb = MagicMock(index=0, is_backbone=True)
-        mock_atom_sc = MagicMock(index=1, is_backbone=False)
+        mock_atom_bb = MagicMock(index=0, is_sidechain=False)
+        mock_atom_sc = MagicMock(index=1, is_sidechain=True)
         mock_residue = MagicMock(atoms=[mock_atom_bb, mock_atom_sc])
         mock_chain = MagicMock(residues=[mock_residue])
         mock_traj.topology.chains = [mock_chain]
@@ -507,14 +507,14 @@ class TestGetChainInfo(unittest.TestCase):
         self.assertIn("Chain 1", result)
         seq, bb_sasa, sc_sasa = result["Chain 1"]
         self.assertEqual(seq, "ACDE")
-        self.assertEqual(bb_sasa, [1.1])
-        self.assertEqual(sc_sasa, [2.2])
+        self.assertAlmostEqual(bb_sasa[0], [110][0]) #scaled by 100 because this returns in nm!
+        self.assertAlmostEqual(sc_sasa[0], [220][0]) #scaled by 100 because this returns in nm!
 
         # Check "All" key
         full_seq, all_bb_sasa, all_sc_sasa = result["All"]
         self.assertEqual(full_seq, "ACDE")
-        self.assertEqual(all_bb_sasa, [1.1])
-        self.assertEqual(all_sc_sasa, [2.2])
+        self.assertAlmostEqual(all_bb_sasa[0], [110][0]) #scaled by 100 because this returns in nm!
+        self.assertAlmostEqual(all_sc_sasa[0], [220][0]) #scaled by 100 because this returns in nm!
 
     @patch("osmofold.osmofold_local.extract_sequence")
     @patch("osmofold.osmofold_local.extract_sequences_by_chains")
@@ -526,18 +526,18 @@ class TestGetChainInfo(unittest.TestCase):
         mock_traj = MagicMock()
 
         # Chain 1: 1 residue with 2 atoms
-        mock_atom_bb1 = MagicMock(index=0, is_backbone=True)
-        mock_atom_sc1 = MagicMock(index=1, is_backbone=False)
+        mock_atom_bb1 = MagicMock(index=0, is_sidechain=False)
+        mock_atom_sc1 = MagicMock(index=1, is_sidechain=True)
         mock_residue1 = MagicMock(atoms=[mock_atom_bb1, mock_atom_sc1])
         mock_chain1 = MagicMock(residues=[mock_residue1])
 
         # Chain 2: 2 residues, each with 2 atoms (indices 2,3 and 4,5)
-        mock_atom_bb2 = MagicMock(index=2, is_backbone=True)
-        mock_atom_sc2 = MagicMock(index=3, is_backbone=False)
+        mock_atom_bb2 = MagicMock(index=2, is_sidechain=False)
+        mock_atom_sc2 = MagicMock(index=3, is_sidechain=True)
         mock_residue2 = MagicMock(atoms=[mock_atom_bb2, mock_atom_sc2])
 
-        mock_atom_bb3 = MagicMock(index=4, is_backbone=True)
-        mock_atom_sc3 = MagicMock(index=5, is_backbone=False)
+        mock_atom_bb3 = MagicMock(index=4, is_sidechain=False)
+        mock_atom_sc3 = MagicMock(index=5, is_sidechain=True)
         mock_residue3 = MagicMock(atoms=[mock_atom_bb3, mock_atom_sc3])
 
         mock_chain2 = MagicMock(residues=[mock_residue2, mock_residue3])
@@ -560,20 +560,20 @@ class TestGetChainInfo(unittest.TestCase):
 
         result = osmofold_local.get_chain_info("dummy.pdb")
 
-        self.assertEqual(result["Chain 1"], ("A", [1.0], [8.0]))
-        self.assertEqual(result["Chain 2"], ("BC", [2.0, 3.0], [9.0, 10.0]))
+        self.assertEqual(result["Chain 1"], ("A", [100], [800]))
+        self.assertEqual(result["Chain 2"], ("BC", [200, 300], [900, 1000]))
         
         # More precise check for Chain 2
         bb_chain2 = result["Chain 2"][1]
         sc_chain2 = result["Chain 2"][2]
-        self.assertEqual(bb_chain2, [2.0, 3.0])
-        self.assertEqual(sc_chain2, [9.0, 10.0])
+        self.assertEqual(bb_chain2, [200, 300])
+        self.assertEqual(sc_chain2, [900, 1000])
 
         # Overall all residues
         full_seq, all_bb, all_sc = result["All"]
         self.assertEqual(full_seq, "ABC")
-        self.assertEqual(all_bb, [1.0, 2.0, 3.0])
-        self.assertEqual(all_sc, [8.0, 9.0, 10.0])
+        self.assertEqual(all_bb, [100, 200, 300])
+        self.assertEqual(all_sc, [800, 900, 1000])
 
     @patch("osmofold.osmofold_local.extract_sequence")
     @patch("osmofold.osmofold_local.extract_sequences_by_chains")
@@ -704,8 +704,13 @@ class TestProteinUnfoldedDG(unittest.TestCase):
     
     @patch("osmofold.osmofold_local.extract_sequence")
     @patch("osmofold.osmofold_local.get_tfe")
-    def test_no_osmolytes(self, mock_get_tfe, mock_extract_sequence):
+    @patch("osmofold.osmofold_local.get_unfolded_sasa_from_sequence")
+    @patch("osmofold.osmofold_local.sasa_to_rasa")
+    def test_no_osmolytes(self, mock_sasa_to_rasa, mock_get_unfolded_sasa_from_sequence, mock_get_tfe, mock_extract_sequence):
         mock_extract_sequence.return_value = "ABCDE"
+        mock_get_tfe.return_value = ([], [])
+        mock_get_unfolded_sasa_from_sequence.return_value = ([38] * 5, [100 * 5])
+        mock_sasa_to_rasa.return_value = ([0.9] * 5, [0.8] * 5)
         pdb = "test.pdb"
         osmolytes = []
         
@@ -774,12 +779,13 @@ class TestProteinFoldedDG(unittest.TestCase):
             for osmolyte in expected_dG[chain]:
                 self.assertAlmostEqual(result[chain][osmolyte], expected_dG[chain][osmolyte], places=4)
 
-
     @patch("osmofold.osmofold_local.get_pdb_info")
     @patch("osmofold.osmofold_local.get_tfe")
     @patch("osmofold.osmofold_local.sasa_to_rasa")
     def test_no_osmolytes(self, mock_sasa_to_rasa, mock_get_tfe, mock_get_pdb_info):
-        mock_get_pdb_info.return_value = ("ABCDE", [1.0] * 5, [0.5] * 5)
+        mock_get_pdb_info.return_value = ("ABCDE", [42] * 5, [120] * 5)
+        mock_get_tfe.return_value = ([], [])
+        mock_sasa_to_rasa.return_value = ([0.8] * 5, [0.7] * 5)
         pdb = "test.pdb"
         osmolytes = []
         
