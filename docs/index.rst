@@ -32,12 +32,17 @@ In short, OsmoFold will quantitatively assess the impact of several osmolytes on
    * OsmoFold requires the existence of a known, binary conformational change in the protein(s) of interest.
    * OsmoFold cannot rule out the presence of specific protein-small molecule interactions, such as direct binding.
 
-In general, **OsmoFold should be used to support experimental data, not replace it**.
+In general, **OsmoFold should be used to generate hypotheses or to support experimental data, not to replace it**.
 
 Version History
 ---------------
 
-* 7/X/25 - OsmoFold v.0.5.0
+* 8/27/25 - OsmoFold v.1.0.0
+
+No changes to the code, but OsmoFold has been accepted in Biophysical Journal! The version number has been changed to reflect this. All data in
+the soon to be available manuscript was generated using v.1.0.0 
+
+* 7/11/25 - OsmoFold v.0.5.0
 
 Overhauled the TFE caculation method to be consistent with `Auton and Bolen's literature <https://pubmed.ncbi.nlm.nih.gov/17875431/>`_ (again)
 Removed SOURSOP in favor of MDTraj, greatly reducing compute per protein

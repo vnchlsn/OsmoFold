@@ -1,4 +1,4 @@
-# Welcome to OsmoFold v.0.5.0
+# Welcome to OsmoFold v.1.0.0
 
 Vincent Nicholson<sup>1</sup>, Sujina Maharjan<sup>1</sup>, Shahar Sukenik<sup>2</sup>, Thomas C. Boothby<sup>1</sup>
 
@@ -20,6 +20,8 @@ protective function during drying](https://elifesciences.org/reviewed-preprints/
 2.   [LEA_4 motifs function alone and in conjunction with synergistic cosolutes to protect a labile enzyme during desiccation](https://www.biorxiv.org/content/10.1101/2024.09.04.611296v1.full.pdf)
 3.   [Osmolyte-IDP Interactions During Desiccation](https://www.sciencedirect.com/science/article/pii/S1877117324001765?via%3Dihub)
 
-In short, OsmoFold will quantitatively asses the impact of several omsolytes on a given protein conformational change. Please note that OsmoFold does **not guarentee that said conformational change is physiologically relevant.** To put it simply, OsmoFold requires the existence of a known, binary conformational change in the protein(s) of interest. Additionally, it cannot rule out the presence of specific protein small molecule interactions, such as direct binding. In general, OsmoFold should be used to support experimental data, not replace it.
+In short, OsmoFold will quantitatively asses the impact of several omsolytes on a given protein conformational change. Please note that OsmoFold does **not guarentee that said conformational change is physiologically relevant.** To put it simply, OsmoFold requires the existence of a known, binary conformational change in the protein(s) of interest. Additionally, it cannot rule out the presence of specific protein small molecule interactions, such as direct binding. In general, OsmoFold should be used to generate hypotheses or to support experimental data, not to replace it.
+
+*As of 27/08/25, the corresponding manuscript for OsmoFold has been accepted for publication and will soon be online. All data within was generated using OsmoFold 1.0.0.*
 
 [Try OsmoFold as a Colab Notebook](https://colab.research.google.com/drive/1qBnIIWq-4Z_YjWDEhtJ8wOgOXQpSbuPd?usp=sharing)

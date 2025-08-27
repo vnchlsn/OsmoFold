@@ -1,4 +1,4 @@
-.. A simple guide for installing OsmoFold in it's current form
+.. A simple guide for installing OsmoFold in its current form
 
 Installation
 ============
