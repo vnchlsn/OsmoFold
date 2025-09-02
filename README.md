@@ -22,6 +22,6 @@ protective function during drying](https://elifesciences.org/reviewed-preprints/
 
 In short, OsmoFold will quantitatively asses the impact of several omsolytes on a given protein conformational change. Please note that OsmoFold does **not guarentee that said conformational change is physiologically relevant.** To put it simply, OsmoFold requires the existence of a known, binary conformational change in the protein(s) of interest. Additionally, it cannot rule out the presence of specific protein small molecule interactions, such as direct binding. In general, OsmoFold should be used to generate hypotheses or to support experimental data, not to replace it.
 
-*As of 27/08/25, the corresponding manuscript for OsmoFold has been accepted for publication and will soon be online. All data within was generated using OsmoFold 1.0.0.*
+*As of 02/09/25, [the corresponding manuscript for OsmoFold has been accepted for publication and is available online as a pre-proof](https://doi.org/10.1016/j.bpj.2025.08.034)! All data within was generated using OsmoFold 1.0.0.*
 
 [Try OsmoFold as a Colab Notebook](https://colab.research.google.com/drive/1qBnIIWq-4Z_YjWDEhtJ8wOgOXQpSbuPd?usp=sharing)
