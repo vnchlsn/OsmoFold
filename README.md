@@ -25,4 +25,5 @@ In short, OsmoFold will quantitatively asses the impact of several omsolytes on 
 *As of 11/04/25, [the corresponding manuscript for OsmoFold is published](https://doi.org/10.1016/j.bpj.2025.08.034)! All data within was generated using OsmoFold 1.0.0.*
 
 [Try OsmoFold as a Colab Notebook](https://colab.research.google.com/drive/1qBnIIWq-4Z_YjWDEhtJ8wOgOXQpSbuPd?usp=sharing)
+
 [Read the Documentation](https://osmofold.readthedocs.io/en/latest/)
